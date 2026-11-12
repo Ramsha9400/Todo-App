@@ -1,0 +1,347 @@
+/* =====================================================
+   To Do app  |  Created by @stackanddstyle
+   Motion (hover, press, add, remove, tick) is driven by script.js, which
+   sets the custom properties --h, --p, --e, --d and --v every frame.
+   There are no CSS transitions or keyframes on purpose.
+   ===================================================== */
+
+/* ============ CHANGE COLORS HERE ============ */
+:root {
+  --bg-a: #f6f8fc;            /* page gradient start */
+  --bg-b: #e8ecf5;            /* page gradient end */
+  --surface: #f1f4fa;         /* card, rows and buttons */
+  --ink: #0f172a;             /* main text */
+  --hint: #7a86a1;            /* soft text */
+  --accent: #4f6bd6;          /* plus, edit, focus glow */
+  --accent-rgb: 79 107 214;
+  --danger: #e5484d;          /* delete, clear all */
+  --danger-rgb: 229 72 77;
+  --ok-rgb: 34 176 125;       /* finished task */
+  --focus: #2563eb;           /* keyboard focus ring */
+  --sh-dark: 163 177 198;     /* neumorphic shadow, dark side */
+  --sh-light: 255 255 255;    /* neumorphic shadow, light side */
+  --credit-bg: #0f1f44;
+  --credit-ink: #ffffff;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  /* 1rem = 16px when the demo is about 1024px wide */
+  font-size: clamp(11px, 1.5625vw, 18px);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Segoe UI", Inter, system-ui, -apple-system, Roboto,
+               Arial, sans-serif;
+  background:
+    radial-gradient(60rem 40rem at 50% -10%, #ffffff 0%, transparent 70%),
+    linear-gradient(160deg, var(--bg-a), var(--bg-b));
+  background-attachment: fixed;
+}
+
+.sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Content starts at the top, with room below for the credit pill */
+.stage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1.4rem 1rem 6rem;
+}
+
+/* ---------- Card ---------- */
+.card {
+  width: min(100%, 54rem);
+  padding: 1.6rem 1.8rem 1.7rem;
+  border-radius: 2.2rem;
+  background: var(--surface);
+  box-shadow:
+    1.3rem 1.3rem 2.8rem rgb(var(--sh-dark) / .55),
+    -1rem -1rem 2.2rem rgb(var(--sh-light) / .95);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.3rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+
+/* ---------- Raised neumorphic look (buttons + rows) ----------
+   --h = hover amount (0 to 1), --p = pressed amount (0 to 1).
+   Pressed turns the outer shadow into an inner one. */
+.btn, .item {
+  --h: 0;
+  --p: 0;
+  --o: 5px;
+  box-shadow:
+    calc(var(--o) + var(--h) * 2px) calc(var(--o) + var(--h) * 2px)
+      calc(var(--o) * 2 + var(--h) * 4px)
+      rgb(var(--sh-dark) / calc(.55 * (1 - var(--p)))),
+    calc(var(--o) * -1 - var(--h) * 2px)
+      calc(var(--o) * -1 - var(--h) * 2px)
+      calc(var(--o) * 2 + var(--h) * 4px)
+      rgb(var(--sh-light) / calc(1 - var(--p))),
+    inset calc(var(--o) * .6) calc(var(--o) * .6) calc(var(--o) * 1.2)
+      rgb(var(--sh-dark) / calc(.6 * var(--p))),
+    inset calc(var(--o) * -.6) calc(var(--o) * -.6) calc(var(--o) * 1.2)
+      rgb(var(--sh-light) / calc(.9 * var(--p)));
+}
+
+.btn {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  background: var(--surface);
+  color: var(--accent);
+  display: inline-grid;
+  place-items: center;
+  transform: translateY(calc(var(--h) * -2px))
+             scale(calc(1 + var(--h) * .06 - var(--p) * .08));
+}
+
+.btn svg, .check svg {
+  width: 48%;
+  height: 48%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.round {
+  width: var(--size, 4rem);
+  height: var(--size, 4rem);
+  border-radius: 50%;
+}
+
+.tool    { --size: 3.6rem; --o: 4px; color: var(--hint); }
+.add-btn { --size: 4.6rem; }
+.edit, .del { --size: 3.9rem; --o: 4px; }
+.edit { color: var(--accent); }
+.del  { color: var(--danger); }
+
+/* Sound button: show the right icon */
+.tool .i-off { display: none; }
+.muted .i-on { display: none; }
+.muted .i-off { display: block; }
+
+/* ---------- Add field (sunken) ---------- */
+.add {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+
+.field {
+  --h: 0;
+  flex: 1;
+  min-width: 0;
+  height: 4.6rem;
+  padding: 0 1.4rem;
+  border: 0;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+  box-shadow:
+    inset .4rem .4rem .9rem rgb(var(--sh-dark) / .6),
+    inset -.4rem -.4rem .9rem rgb(var(--sh-light) / .95),
+    0 0 0 calc(var(--h) * .28rem) rgb(var(--accent-rgb) / calc(var(--h) * .45));
+}
+.field::placeholder { color: var(--hint); opacity: .9; }
+.field.bad { outline: .22rem solid rgb(var(--danger-rgb) / .7); }
+
+/* ---------- Task list ---------- */
+.list {
+  list-style: none;
+  margin: 0 -1rem;
+  padding: .9rem 1rem .2rem;
+  max-height: 27rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--sh-dark) / .8) transparent;
+}
+
+/* --e = enter/exit amount (0 to 1), --d = done amount (0 to 1) */
+.item {
+  --e: 1;
+  --d: 0;
+  --row: 5.4rem;
+  --gap: 1rem;
+  --o: 4px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--row);
+  padding: 0 .75rem 0 1rem;
+  border-radius: 1.6rem;
+  background: var(--surface);
+  opacity: var(--e);
+  /* a leaving row also pulls the rows below it up */
+  margin-bottom: calc((var(--e) - 1) * var(--row) + var(--e) * var(--gap));
+  transform: translateY(calc((1 - var(--e)) * 1.2rem - var(--h) * 2px))
+             scale(calc(.94 + .06 * var(--e) + var(--h) * .01));
+}
+
+.text {
+  position: relative;
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--hint) calc(var(--d) * 100%), var(--ink));
+}
+/* strike-through line grows with --d */
+.text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 55%;
+  height: .2rem;
+  width: calc(var(--d) * 100%);
+  border-radius: 1rem;
+  background: currentColor;
+}
+
+.edit-input {
+  flex: 1;
+  min-width: 0;
+  height: 3.6rem;
+  padding: 0 .4rem;
+  border: 0;
+  border-bottom: .2rem solid var(--accent);
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+}
+
+/* Round tick box on the left of every task */
+.check {
+  --h: 0;
+  flex: none;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgb(var(--ok-rgb) / var(--d));
+  transform: scale(calc(1 + var(--h) * .1));
+  box-shadow:
+    inset .3rem .3rem .6rem rgb(var(--sh-dark) / calc(.8 - var(--d) * .4)),
+    inset -.3rem -.3rem .6rem rgb(var(--sh-light) / calc(1 - var(--d) * .6));
+}
+.check svg {
+  width: 62%;
+  height: 62%;
+  stroke-width: 3;
+  opacity: var(--d);
+  transform: scale(calc(.4 + var(--d) * .6));
+}
+
+/* Edit button swaps its pencil for a tick while editing */
+.edit .i-save { display: none; }
+.editing .edit .i-edit { display: none; }
+.editing .edit .i-save { display: block; }
+
+/* ---------- Empty state + Clear All ---------- */
+.empty {
+  --v: 1;
+  margin: 0;
+  height: calc(var(--v) * 5rem);
+  opacity: var(--v);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--hint);
+  font-size: 1.75rem;
+}
+
+.clear {
+  --o: 4px;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  height: 4.2rem;
+  margin: .7rem auto 0;
+  padding: 0 2rem;
+  border-radius: 1.4rem;
+  color: var(--danger);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+.clear svg { width: 1.9rem; height: 1.9rem; }
+
+/* ---------- Hint + credit ---------- */
+.hint {
+  margin: 1.2rem 0 0;
+  color: var(--hint);
+  font-size: 1.7rem;
+  text-align: center;
+}
+kbd { font: inherit; font-weight: 700; color: var(--ink); }
+
+.credit {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  margin: 0;
+  padding: .55rem 1.3rem;
+  border-radius: 999px;
+  background: var(--credit-bg);
+  color: var(--credit-ink);
+  font-size: 1.5rem;
+  box-shadow: 0 .4rem 1.2rem rgb(15 31 68 / .3);
+}
+.credit b { font-weight: 700; }
+
+/* ---------- Keyboard focus ---------- */
+:focus-visible {
+  outline: .22rem solid var(--focus);
+  outline-offset: .25rem;
+}
+.field:focus-visible, .edit-input:focus-visible { outline-offset: .1rem; }
+.edit-input:focus-visible { outline: none; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 480px) {
+  .stage { padding-top: 1rem; }
+  .card { padding: 1.2rem 1.1rem 1.3rem; }
+  h1 { font-size: 2.1rem; }
+}

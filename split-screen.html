@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>To Do app | UI showcase | @stackanddstyle</title>
+<style>
+/* UI showcase page. Built for a 1080 x 1920 reel, and it also adapts to
+   other screens. --s is the base unit: 1s is about 10.8px in the reel. */
+:root {
+  --page: #070a16;
+  --panel: #0d1124;
+  --code: #0a1023;
+  --line: rgba(255, 255, 255, .10);
+  --text: #e6ebff;
+  --muted: #8d9bc0;
+  --cyan: #22d3ee;
+  --s: min(1vw, .5625vh);
+  --sans: Inter, "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --mono: "JetBrains Mono", "Fira Code", Consolas, "DejaVu Sans Mono", monospace;
+  /* code colours */
+  --c-comment: #6b7a99; --c-string: #86efac; --c-keyword: #c084fc;
+  --c-tag: #fb7185; --c-attr: #fbbf24; --c-number: #fb923c;
+  --c-func: #60a5fa; --c-prop: #93c5fd;
+}
+@media (min-aspect-ratio: 1/1) { :root { --s: min(.62vw, 1vh); } }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--s) * 1.7);
+  padding: calc(var(--s) * 2.6);
+}
+@media (min-aspect-ratio: 1/1) {
+  .page { display: grid; grid-template-columns: 1fr 1fr;
+          grid-template-rows: auto minmax(0, 1fr); }
+  .top { grid-column: 1 / -1; }
+}
+
+/* ----- header ----- */
+.top { display: flex; align-items: center; justify-content: space-between;
+       gap: calc(var(--s) * 2); min-height: calc(var(--s) * 6); }
+.brand { display: flex; align-items: center; gap: calc(var(--s) * 1.5); }
+.dot { width: calc(var(--s) * 2.4); height: calc(var(--s) * 2.4);
+       border-radius: 50%;
+       background: linear-gradient(135deg, #8b5cf6, #22d3ee);
+       box-shadow: 0 0 calc(var(--s) * 2.2) rgba(34, 211, 238, .65),
+                   0 0 calc(var(--s) * 1) rgba(139, 92, 246, .8); }
+.name { font-size: calc(var(--s) * 3.4); font-weight: 600; color: #fff;
+        white-space: nowrap; }
+.tech { display: flex; gap: calc(var(--s) * 1); margin-left: calc(var(--s) * .6); }
+.tech svg { width: calc(var(--s) * 2.6); height: calc(var(--s) * 2.6); }
+.pill { padding: calc(var(--s) * 1) calc(var(--s) * 2.1);
+        border: 1px solid var(--line); border-radius: 999px;
+        background: rgba(255, 255, 255, .05); color: var(--muted);
+        font-size: calc(var(--s) * 2.2); white-space: nowrap; }
+.pill b { color: var(--cyan); font-weight: 600; }
+
+/* ----- panels ----- */
+.panel { min-height: 0; display: flex; flex-direction: column;
+         background: var(--panel); border: 1px solid var(--line);
+         border-radius: calc(var(--s) * 1.7); overflow: hidden;
+         box-shadow: 0 calc(var(--s) * 2.8) calc(var(--s) * 7)
+                     rgba(0, 0, 0, .55); }
+.demo { flex: 55 1 0; }
+.code { flex: 45 1 0; }
+
+.bar { height: calc(var(--s) * 5.2); flex: none; display: flex;
+       align-items: center; gap: calc(var(--s) * 1.4);
+       padding: 0 calc(var(--s) * 1.8);
+       background: rgba(255, 255, 255, .03);
+       border-bottom: 1px solid var(--line); }
+.dots { display: flex; gap: calc(var(--s) * .8); }
+.dots i { width: calc(var(--s) * 1.3); height: calc(var(--s) * 1.3);
+          border-radius: 50%; display: block; }
+.dots i:nth-child(1) { background: #ff5f57; }
+.dots i:nth-child(2) { background: #febc2e; }
+.dots i:nth-child(3) { background: #28c840; }
+.bar-label { font-size: calc(var(--s) * 2); color: var(--muted);
+             margin-left: calc(var(--s) * .6); }
+
+iframe { flex: 1; width: 100%; min-height: 0; border: 0; background: #f6f8fc; }
+
+/* ----- tabs ----- */
+.tabs { display: flex; align-self: stretch; margin-left: calc(var(--s) * .4); }
+.tab { display: flex; align-items: center; gap: calc(var(--s) * .8);
+       padding: 0 calc(var(--s) * 1.5); border: 0; background: transparent;
+       color: var(--muted); font: 600 calc(var(--s) * 2) var(--sans);
+       cursor: pointer; border-bottom: calc(var(--s) * .35) solid transparent; }
+.tab svg { width: calc(var(--s) * 2.1); height: calc(var(--s) * 2.1); }
+.tab.on { background: rgba(255, 255, 255, .08); color: #fff; }
+.tab[data-key="html"].on { border-bottom-color: #f97316; }
+.tab[data-key="css"].on  { border-bottom-color: #3b82f6; }
+.tab[data-key="js"].on   { border-bottom-color: #facc15; }
+.tab:focus-visible, .copy:focus-visible, .area:focus-visible {
+  outline: 2px solid var(--cyan); outline-offset: -2px; }
+
+.file { margin-left: auto; font: calc(var(--s) * 1.8) var(--mono);
+        color: var(--muted); white-space: nowrap; }
+.copy { min-width: calc(var(--s) * 8.6); padding: calc(var(--s) * .7) calc(var(--s) * 1.4);
+        border: 1px solid var(--line); border-radius: calc(var(--s) * 1);
+        background: rgba(255, 255, 255, .06); color: var(--text);
+        font: 600 calc(var(--s) * 1.8) var(--sans); cursor: pointer; }
+
+/* ----- code ----- */
+.area { flex: 1; min-height: 0; overflow: auto; background: var(--code);
+        padding: calc(var(--s) * 1.8) calc(var(--s) * 2);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, .25) transparent; }
+pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2;
+      font: calc(var(--s) * 1.76) / 1.6 var(--mono); color: #d6def5; }
+pre[hidden] { display: none; }
+.c { color: var(--c-comment); font-style: italic; }
+.s { color: var(--c-string); }
+.k { color: var(--c-keyword); }
+.t { color: var(--c-tag); }
+.a { color: var(--c-attr); }
+.n { color: var(--c-number); }
+.f { color: var(--c-func); }
+.p { color: var(--c-prop); }
+@media (min-aspect-ratio: 1/1) {
+  pre { font-size: calc(var(--s) * 1.9); }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-html" viewBox="0 0 24 24">
+      <path d="M3 2l1.7 19L12 23l7.3-2L21 2z" fill="#e44d26"/>
+      <path d="M12 21.2l5.9-1.6L19.3 3.9H12z" fill="#f16529"/>
+      <text x="12" y="16.2" text-anchor="middle" font-size="11.5"
+            font-weight="700" fill="#fff" font-family="Arial, sans-serif">5</text>
+    </symbol>
+    <symbol id="i-css" viewBox="0 0 24 24">
+      <path d="M3 2l1.7 19L12 23l7.3-2L21 2z" fill="#1572b6"/>
+      <path d="M12 21.2l5.9-1.6L19.3 3.9H12z" fill="#33a9dc"/>
+      <text x="12" y="16.2" text-anchor="middle" font-size="11.5"
+            font-weight="700" fill="#fff" font-family="Arial, sans-serif">3</text>
+    </symbol>
+    <symbol id="i-js" viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="20" rx="1.5" fill="#f7df1e"/>
+      <text x="20.6" y="19.6" text-anchor="end" font-size="10.5"
+            font-weight="800" fill="#1b1b1b" font-family="Arial, sans-serif">JS</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <header class="top">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="name">To Do app</span>
+      <span class="tech" aria-label="HTML, CSS and JavaScript">
+        <svg><use href="#i-html"/></svg>
+        <svg><use href="#i-css"/></svg>
+        <svg><use href="#i-js"/></svg>
+      </span>
+    </div>
+    <div class="pill">Created by <b>@stackanddstyle</b></div>
+  </header>
+
+  <section class="panel demo" aria-label="Live preview">
+    <div class="bar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="bar-label">Live Preview</span>
+    </div>
+    <iframe title="To Do app live preview" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+  &lt;title&gt;To Do app | @stackanddstyle&lt;/title&gt;
+  &lt;style&gt;
+/* =====================================================
+   To Do app  |  Created by @stackanddstyle
+   Motion (hover, press, add, remove, tick) is driven by script.js, which
+   sets the custom properties --h, --p, --e, --d and --v every frame.
+   There are no CSS transitions or keyframes on purpose.
+   ===================================================== */
+
+/* ============ CHANGE COLORS HERE ============ */
+:root {
+  --bg-a: #f6f8fc;            /* page gradient start */
+  --bg-b: #e8ecf5;            /* page gradient end */
+  --surface: #f1f4fa;         /* card, rows and buttons */
+  --ink: #0f172a;             /* main text */
+  --hint: #7a86a1;            /* soft text */
+  --accent: #4f6bd6;          /* plus, edit, focus glow */
+  --accent-rgb: 79 107 214;
+  --danger: #e5484d;          /* delete, clear all */
+  --danger-rgb: 229 72 77;
+  --ok-rgb: 34 176 125;       /* finished task */
+  --focus: #2563eb;           /* keyboard focus ring */
+  --sh-dark: 163 177 198;     /* neumorphic shadow, dark side */
+  --sh-light: 255 255 255;    /* neumorphic shadow, light side */
+  --credit-bg: #0f1f44;
+  --credit-ink: #ffffff;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  /* 1rem = 16px when the demo is about 1024px wide */
+  font-size: clamp(11px, 1.5625vw, 18px);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: &quot;Segoe UI&quot;, Inter, system-ui, -apple-system, Roboto,
+               Arial, sans-serif;
+  background:
+    radial-gradient(60rem 40rem at 50% -10%, #ffffff 0%, transparent 70%),
+    linear-gradient(160deg, var(--bg-a), var(--bg-b));
+  background-attachment: fixed;
+}
+
+.sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Content starts at the top, with room below for the credit pill */
+.stage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1.4rem 1rem 6rem;
+}
+
+/* ---------- Card ---------- */
+.card {
+  width: min(100%, 54rem);
+  padding: 1.6rem 1.8rem 1.7rem;
+  border-radius: 2.2rem;
+  background: var(--surface);
+  box-shadow:
+    1.3rem 1.3rem 2.8rem rgb(var(--sh-dark) / .55),
+    -1rem -1rem 2.2rem rgb(var(--sh-light) / .95);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.3rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+
+/* ---------- Raised neumorphic look (buttons + rows) ----------
+   --h = hover amount (0 to 1), --p = pressed amount (0 to 1).
+   Pressed turns the outer shadow into an inner one. */
+.btn, .item {
+  --h: 0;
+  --p: 0;
+  --o: 5px;
+  box-shadow:
+    calc(var(--o) + var(--h) * 2px) calc(var(--o) + var(--h) * 2px)
+      calc(var(--o) * 2 + var(--h) * 4px)
+      rgb(var(--sh-dark) / calc(.55 * (1 - var(--p)))),
+    calc(var(--o) * -1 - var(--h) * 2px)
+      calc(var(--o) * -1 - var(--h) * 2px)
+      calc(var(--o) * 2 + var(--h) * 4px)
+      rgb(var(--sh-light) / calc(1 - var(--p))),
+    inset calc(var(--o) * .6) calc(var(--o) * .6) calc(var(--o) * 1.2)
+      rgb(var(--sh-dark) / calc(.6 * var(--p))),
+    inset calc(var(--o) * -.6) calc(var(--o) * -.6) calc(var(--o) * 1.2)
+      rgb(var(--sh-light) / calc(.9 * var(--p)));
+}
+
+.btn {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  background: var(--surface);
+  color: var(--accent);
+  display: inline-grid;
+  place-items: center;
+  transform: translateY(calc(var(--h) * -2px))
+             scale(calc(1 + var(--h) * .06 - var(--p) * .08));
+}
+
+.btn svg, .check svg {
+  width: 48%;
+  height: 48%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.round {
+  width: var(--size, 4rem);
+  height: var(--size, 4rem);
+  border-radius: 50%;
+}
+
+.tool    { --size: 3.6rem; --o: 4px; color: var(--hint); }
+.add-btn { --size: 4.6rem; }
+.edit, .del { --size: 3.9rem; --o: 4px; }
+.edit { color: var(--accent); }
+.del  { color: var(--danger); }
+
+/* Sound button: show the right icon */
+.tool .i-off { display: none; }
+.muted .i-on { display: none; }
+.muted .i-off { display: block; }
+
+/* ---------- Add field (sunken) ---------- */
+.add {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+
+.field {
+  --h: 0;
+  flex: 1;
+  min-width: 0;
+  height: 4.6rem;
+  padding: 0 1.4rem;
+  border: 0;
+  border-radius: 1.5rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+  box-shadow:
+    inset .4rem .4rem .9rem rgb(var(--sh-dark) / .6),
+    inset -.4rem -.4rem .9rem rgb(var(--sh-light) / .95),
+    0 0 0 calc(var(--h) * .28rem) rgb(var(--accent-rgb) / calc(var(--h) * .45));
+}
+.field::placeholder { color: var(--hint); opacity: .9; }
+.field.bad { outline: .22rem solid rgb(var(--danger-rgb) / .7); }
+
+/* ---------- Task list ---------- */
+.list {
+  list-style: none;
+  margin: 0 -1rem;
+  padding: .9rem 1rem .2rem;
+  max-height: 27rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--sh-dark) / .8) transparent;
+}
+
+/* --e = enter/exit amount (0 to 1), --d = done amount (0 to 1) */
+.item {
+  --e: 1;
+  --d: 0;
+  --row: 5.4rem;
+  --gap: 1rem;
+  --o: 4px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--row);
+  padding: 0 .75rem 0 1rem;
+  border-radius: 1.6rem;
+  background: var(--surface);
+  opacity: var(--e);
+  /* a leaving row also pulls the rows below it up */
+  margin-bottom: calc((var(--e) - 1) * var(--row) + var(--e) * var(--gap));
+  transform: translateY(calc((1 - var(--e)) * 1.2rem - var(--h) * 2px))
+             scale(calc(.94 + .06 * var(--e) + var(--h) * .01));
+}
+
+.text {
+  position: relative;
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--hint) calc(var(--d) * 100%), var(--ink));
+}
+/* strike-through line grows with --d */
+.text::after {
+  content: &quot;&quot;;
+  position: absolute;
+  left: 0;
+  top: 55%;
+  height: .2rem;
+  width: calc(var(--d) * 100%);
+  border-radius: 1rem;
+  background: currentColor;
+}
+
+.edit-input {
+  flex: 1;
+  min-width: 0;
+  height: 3.6rem;
+  padding: 0 .4rem;
+  border: 0;
+  border-bottom: .2rem solid var(--accent);
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+}
+
+/* Round tick box on the left of every task */
+.check {
+  --h: 0;
+  flex: none;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgb(var(--ok-rgb) / var(--d));
+  transform: scale(calc(1 + var(--h) * .1));
+  box-shadow:
+    inset .3rem .3rem .6rem rgb(var(--sh-dark) / calc(.8 - var(--d) * .4)),
+    inset -.3rem -.3rem .6rem rgb(var(--sh-light) / calc(1 - var(--d) * .6));
+}
+.check svg {
+  width: 62%;
+  height: 62%;
+  stroke-width: 3;
+  opacity: var(--d);
+  transform: scale(calc(.4 + var(--d) * .6));
+}
+
+/* Edit button swaps its pencil for a tick while editing */
+.edit .i-save { display: none; }
+.editing .edit .i-edit { display: none; }
+.editing .edit .i-save { display: block; }
+
+/* ---------- Empty state + Clear All ---------- */
+.empty {
+  --v: 1;
+  margin: 0;
+  height: calc(var(--v) * 5rem);
+  opacity: var(--v);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--hint);
+  font-size: 1.75rem;
+}
+
+.clear {
+  --o: 4px;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  height: 4.2rem;
+  margin: .7rem auto 0;
+  padding: 0 2rem;
+  border-radius: 1.4rem;
+  color: var(--danger);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+.clear svg { width: 1.9rem; height: 1.9rem; }
+
+/* ---------- Hint + credit ---------- */
+.hint {
+  margin: 1.2rem 0 0;
+  color: var(--hint);
+  font-size: 1.7rem;
+  text-align: center;
+}
+kbd { font: inherit; font-weight: 700; color: var(--ink); }
+
+.credit {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  margin: 0;
+  padding: .55rem 1.3rem;
+  border-radius: 999px;
+  background: var(--credit-bg);
+  color: var(--credit-ink);
+  font-size: 1.5rem;
+  box-shadow: 0 .4rem 1.2rem rgb(15 31 68 / .3);
+}
+.credit b { font-weight: 700; }
+
+/* ---------- Keyboard focus ---------- */
+:focus-visible {
+  outline: .22rem solid var(--focus);
+  outline-offset: .25rem;
+}
+.field:focus-visible, .edit-input:focus-visible { outline-offset: .1rem; }
+.edit-input:focus-visible { outline: none; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 480px) {
+  .stage { padding-top: 1rem; }
+  .card { padding: 1.2rem 1.1rem 1.3rem; }
+  h1 { font-size: 2.1rem; }
+}
+
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  &lt;main class=&quot;stage&quot;&gt;
+
+    &lt;!-- The To Do card --&gt;
+    &lt;section class=&quot;card&quot; aria-labelledby=&quot;title&quot;&gt;
+
+      &lt;header class=&quot;card-head&quot;&gt;
+        &lt;!-- Sound on / off (M) --&gt;
+        &lt;button class=&quot;btn round tool&quot; id=&quot;soundBtn&quot; type=&quot;button&quot;
+                aria-pressed=&quot;true&quot; aria-label=&quot;Sound&quot; title=&quot;Sound (M)&quot;&gt;
+          &lt;svg class=&quot;i-on&quot; viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;polygon points=&quot;11 5 6 9 2 9 2 15 6 15 11 19 11 5&quot;/&gt;
+            &lt;path d=&quot;M15.5 8.5a5 5 0 0 1 0 7&quot;/&gt;
+            &lt;path d=&quot;M19 5a10 10 0 0 1 0 14&quot;/&gt;
+          &lt;/svg&gt;
+          &lt;svg class=&quot;i-off&quot; viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;polygon points=&quot;11 5 6 9 2 9 2 15 6 15 11 19 11 5&quot;/&gt;
+            &lt;line x1=&quot;23&quot; y1=&quot;9&quot; x2=&quot;17&quot; y2=&quot;15&quot;/&gt;
+            &lt;line x1=&quot;17&quot; y1=&quot;9&quot; x2=&quot;23&quot; y2=&quot;15&quot;/&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+
+        &lt;h1 id=&quot;title&quot;&gt;ToDo List&lt;/h1&gt;
+
+        &lt;!-- Reset everything (R) --&gt;
+        &lt;button class=&quot;btn round tool&quot; id=&quot;resetBtn&quot; type=&quot;button&quot;
+                aria-label=&quot;Reset&quot; title=&quot;Reset (R)&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;polyline points=&quot;1 4 1 10 7 10&quot;/&gt;
+            &lt;path d=&quot;M3.5 15a9 9 0 1 0 2.1-9.4L1 10&quot;/&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+      &lt;/header&gt;
+
+      &lt;!-- Add a task --&gt;
+      &lt;form class=&quot;add&quot; id=&quot;addForm&quot; autocomplete=&quot;off&quot;&gt;
+        &lt;label class=&quot;sr&quot; for=&quot;taskInput&quot;&gt;New task&lt;/label&gt;
+        &lt;input class=&quot;field&quot; id=&quot;taskInput&quot; type=&quot;text&quot; maxlength=&quot;40&quot;
+               placeholder=&quot;Enter a task...&quot;&gt;
+        &lt;button class=&quot;btn round add-btn&quot; type=&quot;submit&quot; aria-label=&quot;Add task&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;path d=&quot;M12 5v14M5 12h14&quot;/&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+      &lt;/form&gt;
+
+      &lt;!-- Tasks are created by script.js --&gt;
+      &lt;ul class=&quot;list&quot; id=&quot;list&quot; aria-label=&quot;Tasks&quot;&gt;&lt;/ul&gt;
+
+      &lt;p class=&quot;empty&quot; id=&quot;empty&quot;&gt;No tasks yet&lt;/p&gt;
+
+      &lt;button class=&quot;btn clear&quot; id=&quot;clearBtn&quot; type=&quot;button&quot;&gt;
+        &lt;svg viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;
+          &lt;polyline points=&quot;3 6 5 6 21 6&quot;/&gt;
+          &lt;path d=&quot;M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6&quot;/&gt;
+          &lt;path d=&quot;M10 11v6M14 11v6&quot;/&gt;
+          &lt;path d=&quot;M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2&quot;/&gt;
+        &lt;/svg&gt;
+        Clear All
+      &lt;/button&gt;
+    &lt;/section&gt;
+
+    &lt;p class=&quot;hint&quot;&gt;
+      &lt;kbd&gt;Enter&lt;/kbd&gt; add &amp;nbsp;·&amp;nbsp; &lt;kbd&gt;/&lt;/kbd&gt; focus &amp;nbsp;·&amp;nbsp;
+      &lt;kbd&gt;R&lt;/kbd&gt; reset &amp;nbsp;·&amp;nbsp; &lt;kbd&gt;M&lt;/kbd&gt; sound
+    &lt;/p&gt;
+  &lt;/main&gt;
+
+  &lt;p class=&quot;credit&quot;&gt;Created by &lt;b&gt;@stackanddstyle&lt;/b&gt;&lt;/p&gt;
+
+  &lt;script&gt;
+/* =====================================================
+   To Do app  |  Created by @stackanddstyle
+   Plain JavaScript. ONE requestAnimationFrame loop eases every value
+   (hover, press, add, remove, done) toward its target once per frame.
+   Keys:  Enter add | / focus | R reset | M sound | arrows move | Del remove
+   ===================================================== */
+(() =&gt; {
+  &#x27;use strict&#x27;;
+
+  /* ---------- 1. Settings and elements ---------- */
+  const STORE_KEY = &#x27;stackanddstyle-todo-v1&#x27;;
+  const MAX_TASKS = 30;
+
+  const $ = (sel) =&gt; document.querySelector(sel);
+  const list = $(&#x27;#list&#x27;);
+  const empty = $(&#x27;#empty&#x27;);
+  const input = $(&#x27;#taskInput&#x27;);
+  const form = $(&#x27;#addForm&#x27;);
+  const clearBtn = $(&#x27;#clearBtn&#x27;);
+  const resetBtn = $(&#x27;#resetBtn&#x27;);
+  const soundBtn = $(&#x27;#soundBtn&#x27;);
+
+  const svg = (cls, inner) =&gt;
+    `&lt;svg class=&quot;${cls}&quot; viewBox=&quot;0 0 24 24&quot; aria-hidden=&quot;true&quot;&gt;${inner}&lt;/svg&gt;`;
+  const ICON = {
+    check: svg(&#x27;&#x27;, &#x27;&lt;polyline points=&quot;20 6 9 17 4 12&quot;/&gt;&#x27;),
+    edit: svg(&#x27;i-edit&#x27;,
+      &#x27;&lt;path d=&quot;M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z&quot;/&gt;&#x27;),
+    save: svg(&#x27;i-save&#x27;, &#x27;&lt;polyline points=&quot;20 6 9 17 4 12&quot;/&gt;&#x27;),
+    trash: svg(&#x27;&#x27;,
+      &#x27;&lt;polyline points=&quot;3 6 5 6 21 6&quot;/&gt;&#x27; +
+      &#x27;&lt;path d=&quot;M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6&quot;/&gt;&#x27; +
+      &#x27;&lt;path d=&quot;M10 11v6M14 11v6&quot;/&gt;&#x27; +
+      &#x27;&lt;path d=&quot;M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2&quot;/&gt;&#x27;),
+  };
+
+  /* ---------- 2. State ---------- */
+  let tasks = [];            // [{ id, text, done }]
+  let soundOn = true;
+  let nextId = 1;
+  const rows = new Map();    // id -&gt; row (DOM + animation values)
+  const states = new Set();  // hover / press trackers
+
+  let frame = 0;             // frame counter
+  let shake = 0;             // input shake amount
+  let badFrames = 0;         // red outline countdown
+  let emptyV = 1;            // 1 = &quot;No tasks yet&quot; fully shown
+  let stickToEnd = false;    // keep the list scrolled to the new task
+
+  const motionQuery = window.matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;);
+  let reduceMotion = motionQuery.matches;
+  motionQuery.addEventListener(&#x27;change&#x27;, (e) =&gt; { reduceMotion = e.matches; });
+
+  /* ---------- 3. Saving (never breaks if storage is blocked) ---------- */
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ tasks, sound: soundOn }));
+    } catch (err) { /* storage unavailable: ignore */ }
+  }
+
+  function load() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (data &amp;&amp; Array.isArray(data.tasks)) {
+        tasks = data.tasks
+          .filter((t) =&gt; t &amp;&amp; typeof t.text === &#x27;string&#x27;)
+          .slice(0, MAX_TASKS)
+          .map((t) =&gt; ({ id: nextId++, text: t.text, done: !!t.done }));
+      }
+      if (data &amp;&amp; data.sound === false) soundOn = false;
+    } catch (err) { /* nothing saved yet */ }
+  }
+
+  /* ---------- 4. Sound (short synthesized tones) ---------- */
+  const TONES = {                 // [start Hz, end Hz, seconds]
+    add:    [520, 780, .16],
+    done:   [660, 990, .14],
+    edit:   [600, 700, .10],
+    remove: [440, 260, .18],
+    clear:  [520, 200, .30],
+    reset:  [780, 390, .24],
+    toggle: [600, 900, .10],
+  };
+  const soundLog = (window.soundLog = []);   // played tones (for debugging)
+  let audio = null;
+
+  function playTone(name) {
+    if (!soundOn) return;
+    soundLog.push({ name, frame });
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const [f0, f1, len] = TONES[name];
+      const t = audio.currentTime;
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = &#x27;sine&#x27;;
+      osc.frequency.setValueAtTime(f0, t);
+      osc.frequency.exponentialRampToValueAtTime(f1, t + len);
+      gain.gain.setValueAtTime(.0001, t);
+      gain.gain.exponentialRampToValueAtTime(.25, t + .01);
+      gain.gain.exponentialRampToValueAtTime(.0001, t + len);
+      osc.connect(gain).connect(audio.destination);
+      osc.start(t);
+      osc.stop(t + len + .02);
+    } catch (err) { /* audio not available: stay silent */ }
+  }
+
+  /* ---------- 5. Hover / press trackers (values eased in tick) ---------- */
+  function track(el, press = true) {
+    const s = { el, h: 0, p: 0, th: 0, tp: 0, hover: false, focus: false };
+    const aim = () =&gt; { s.th = s.hover ? 1 : s.focus ? .55 : 0; };
+    el.addEventListener(&#x27;pointerenter&#x27;, () =&gt; { s.hover = true; aim(); });
+    el.addEventListener(&#x27;pointerleave&#x27;, () =&gt; {
+      s.hover = false; s.tp = 0; aim();
+    });
+    el.addEventListener(&#x27;focus&#x27;, () =&gt; { s.focus = true; aim(); });
+    el.addEventListener(&#x27;blur&#x27;, () =&gt; { s.focus = false; aim(); });
+    if (press) {
+      el.addEventListener(&#x27;pointerdown&#x27;, () =&gt; { s.tp = 1; });
+      el.addEventListener(&#x27;pointerup&#x27;, () =&gt; { s.tp = 0; });
+      el.addEventListener(&#x27;keydown&#x27;, (e) =&gt; {
+        if (e.key === &#x27; &#x27; || e.key === &#x27;Enter&#x27;) s.tp = 1;
+      });
+      el.addEventListener(&#x27;keyup&#x27;, () =&gt; { s.tp = 0; });
+    }
+    states.add(s);
+    return s;
+  }
+
+  [soundBtn, resetBtn, clearBtn, form.querySelector(&#x27;.add-btn&#x27;)]
+    .forEach((el) =&gt; track(el));
+  const fieldState = track(input, false);
+
+  /* ---------- 6. Task rows ---------- */
+  function createRow(task, delay = 0) {
+    const li = document.createElement(&#x27;li&#x27;);
+    li.className = &#x27;item&#x27;;
+    li.style.setProperty(&#x27;--e&#x27;, &#x27;0&#x27;);
+    li.innerHTML =
+      &#x27;&lt;button class=&quot;check&quot; type=&quot;button&quot; role=&quot;checkbox&quot;&gt;&#x27; +
+        ICON.check + &#x27;&lt;/button&gt;&#x27; +
+      &#x27;&lt;span class=&quot;text&quot;&gt;&lt;/span&gt;&#x27; +
+      &#x27;&lt;button class=&quot;btn round edit&quot; type=&quot;button&quot;&gt;&#x27; +
+        ICON.edit + ICON.save + &#x27;&lt;/button&gt;&#x27; +
+      &#x27;&lt;button class=&quot;btn round del&quot; type=&quot;button&quot;&gt;&#x27; + ICON.trash + &#x27;&lt;/button&gt;&#x27;;
+
+    const row = {
+      task, li, delay,
+      e: 0, te: 1,                       // enter / exit amount
+      d: task.done ? 1 : 0, td: task.done ? 1 : 0,   // done amount
+      leaving: false, editing: false, input: null,
+      textEl: li.querySelector(&#x27;.text&#x27;),
+      check: li.querySelector(&#x27;.check&#x27;),
+      editBtn: li.querySelector(&#x27;.edit&#x27;),
+      delBtn: li.querySelector(&#x27;.del&#x27;),
+      tracked: [],
+    };
+    li._row = row;
+
+    row.tracked.push(track(li, false), track(row.check, false),
+                     track(row.editBtn), track(row.delBtn));
+    row.check.addEventListener(&#x27;click&#x27;, () =&gt; toggleDone(row));
+    row.textEl.addEventListener(&#x27;click&#x27;, () =&gt; toggleDone(row));
+    row.editBtn.addEventListener(&#x27;click&#x27;, () =&gt; toggleEdit(row));
+    row.delBtn.addEventListener(&#x27;click&#x27;, (e) =&gt; removeRow(row, e.detail === 0));
+
+    paintRow(row);
+    rows.set(task.id, row);
+    list.appendChild(li);
+    return row;
+  }
+
+  // Text and accessible names (textContent keeps user text safe)
+  function paintRow(row) {
+    const { text, done } = row.task;
+    row.textEl.textContent = text;
+    row.check.setAttribute(&#x27;aria-checked&#x27;, String(done));
+    row.check.setAttribute(&#x27;aria-label&#x27;, `Done: ${text}`);
+    row.editBtn.setAttribute(&#x27;aria-label&#x27;,
+      row.editing ? &#x27;Save task&#x27; : `Edit: ${text}`);
+    row.delBtn.setAttribute(&#x27;aria-label&#x27;, `Delete: ${text}`);
+  }
+
+  function addTask(raw) {
+    const text = raw.trim();
+    if (!text || tasks.length &gt;= MAX_TASKS) { nudge(); return; }
+    const task = { id: nextId++, text, done: false };
+    tasks.push(task);
+    createRow(task);
+    stickToEnd = true;
+    input.value = &#x27;&#x27;;
+    save();
+    playTone(&#x27;add&#x27;);
+  }
+
+  function toggleDone(row) {
+    if (row.leaving) return;
+    row.task.done = !row.task.done;
+    row.td = row.task.done ? 1 : 0;
+    paintRow(row);
+    save();
+    playTone(&#x27;done&#x27;);
+  }
+
+  function removeRow(row, focusNext) {
+    if (row.leaving) return;
+    const alive = aliveItems();
+    const at = alive.indexOf(row.li);
+    row.leaving = true;
+    row.te = 0;
+    tasks = tasks.filter((t) =&gt; t !== row.task);
+    save();
+    playTone(&#x27;remove&#x27;);
+    if (focusNext) {
+      const next = alive[at + 1] || alive[at - 1];
+      (next ? next._row.delBtn : input).focus();
+    }
+  }
+
+  const aliveItems = () =&gt;
+    [...list.children].filter((li) =&gt; !li._row.leaving);
+
+  function clearAll(tone) {
+    const alive = aliveItems();
+    alive.forEach((li, i) =&gt; {
+      li._row.leaving = true;
+      li._row.te = 0;
+      li._row.delay = i * 5;       // little cascade
+    });
+    tasks = [];
+    save();
+    playTone(tone);
+    if (!alive.length) nudge();
+  }
+
+  function resetAll() {
+    if (document.activeElement &amp;&amp; document.activeElement.blur) {
+      if (document.activeElement !== document.body) {
+        document.activeElement.blur();
+      }
+    }
+    input.value = &#x27;&#x27;;
+    clearAll(&#x27;reset&#x27;);
+    try { localStorage.removeItem(STORE_KEY); } catch (err) { /* ignore */ }
+    save();
+  }
+
+  /* ---------- 7. Editing a task ---------- */
+  function toggleEdit(row) {
+    if (row.leaving) return;
+    row.editing ? finishEdit(row, true) : startEdit(row);
+  }
+
+  function startEdit(row) {
+    const box = document.createElement(&#x27;input&#x27;);
+    box.className = &#x27;edit-input&#x27;;
+    box.maxLength = 40;
+    box.value = row.task.text;
+    box.setAttribute(&#x27;aria-label&#x27;, &#x27;Edit task text&#x27;);
+    row.input = box;
+    row.editing = true;
+    row.li.classList.add(&#x27;editing&#x27;);
+    row.textEl.replaceWith(box);
+    paintRow(row);
+    box.focus();
+    box.select();
+
+    box.addEventListener(&#x27;keydown&#x27;, (e) =&gt; {
+      if (e.key === &#x27;Enter&#x27;) { e.preventDefault(); finishEdit(row, true); }
+      if (e.key === &#x27;Escape&#x27;) { e.preventDefault(); finishEdit(row, false); }
+    });
+    box.addEventListener(&#x27;blur&#x27;, (e) =&gt; {
+      if (e.relatedTarget !== row.editBtn) finishEdit(row, true);
+    });
+  }
+
+  function finishEdit(row, keep) {
+    if (!row.editing) return;
+    const text = row.input.value.trim();
+    row.editing = false;
+    row.li.classList.remove(&#x27;editing&#x27;);
+    if (keep &amp;&amp; text &amp;&amp; text !== row.task.text) {
+      row.task.text = text;
+      save();
+      playTone(&#x27;edit&#x27;);
+    }
+    row.input.replaceWith(row.textEl);
+    row.input = null;
+    paintRow(row);
+  }
+
+  /* ---------- 8. Small helpers ---------- */
+  function nudge() {                 // empty input / nothing to clear
+    badFrames = 40;
+    shake = reduceMotion ? 0 : 1;
+  }
+
+  function toggleSound() {
+    soundOn = !soundOn;
+    soundBtn.setAttribute(&#x27;aria-pressed&#x27;, String(soundOn));
+    soundBtn.setAttribute(&#x27;aria-label&#x27;, soundOn ? &#x27;Sound on&#x27; : &#x27;Sound off&#x27;);
+    soundBtn.classList.toggle(&#x27;muted&#x27;, !soundOn);
+    save();
+    playTone(&#x27;toggle&#x27;);
+  }
+
+  /* ---------- 9. Events ---------- */
+  form.addEventListener(&#x27;submit&#x27;, (e) =&gt; {
+    e.preventDefault();
+    addTask(input.value);
+    input.focus();
+  });
+  clearBtn.addEventListener(&#x27;click&#x27;, () =&gt; clearAll(&#x27;clear&#x27;));
+  resetBtn.addEventListener(&#x27;click&#x27;, resetAll);
+  soundBtn.addEventListener(&#x27;click&#x27;, toggleSound);
+
+  // Arrow keys move between buttons, Delete removes the focused task
+  list.addEventListener(&#x27;keydown&#x27;, (e) =&gt; {
+    const btn = e.target.closest(&#x27;button&#x27;);
+    if (!btn) return;
+    const li = btn.closest(&#x27;.item&#x27;);
+    const btns = [...li.querySelectorAll(&#x27;button&#x27;)];
+    const at = btns.indexOf(btn);
+    const alive = aliveItems();
+    const pos = alive.indexOf(li);
+    let target = null;
+
+    if (e.key === &#x27;ArrowRight&#x27;) target = btns[at + 1] || btns[0];
+    if (e.key === &#x27;ArrowLeft&#x27;) target = btns[at - 1] || btns[btns.length - 1];
+    if (e.key === &#x27;ArrowDown&#x27; &amp;&amp; alive[pos + 1]) {
+      target = alive[pos + 1].querySelectorAll(&#x27;button&#x27;)[at];
+    }
+    if (e.key === &#x27;ArrowUp&#x27; &amp;&amp; alive[pos - 1]) {
+      target = alive[pos - 1].querySelectorAll(&#x27;button&#x27;)[at];
+    }
+    if (e.key === &#x27;Delete&#x27;) { e.preventDefault(); removeRow(li._row, true); }
+    if (target) { e.preventDefault(); target.focus(); }
+  });
+
+  // Global shortcuts (ignored while typing)
+  document.addEventListener(&#x27;keydown&#x27;, (e) =&gt; {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.matches(&#x27;input, textarea&#x27;)) {
+      if (e.key === &#x27;Escape&#x27; &amp;&amp; e.target === input) {
+        input.value = &#x27;&#x27;;
+        input.blur();
+      }
+      return;
+    }
+    const key = e.key.toLowerCase();
+    if (key === &#x27;/&#x27;) { e.preventDefault(); input.focus(); }
+    if (key === &#x27;r&#x27;) resetAll();
+    if (key === &#x27;m&#x27;) toggleSound();
+  });
+
+  /* ---------- 10. The one animation loop ---------- */
+  const approach = (value, target, k) =&gt; {
+    const next = value + (target - value) * k;
+    return Math.abs(target - next) &lt; .002 ? target : next;
+  };
+
+  function tick() {
+    frame++;
+    const k = reduceMotion ? 1 : .2;          // easing per frame
+
+    // hover + press on buttons, rows and the input
+    for (const s of states) {
+      s.h = approach(s.h, s.th, k);
+      s.p = approach(s.p, s.tp, Math.min(1, k * 1.6));
+      if (s.h !== s.ph) { s.el.style.setProperty(&#x27;--h&#x27;, s.h.toFixed(3)); }
+      if (s.p !== s.pp &amp;&amp; s !== fieldState) {
+        s.el.style.setProperty(&#x27;--p&#x27;, s.p.toFixed(3));
+      }
+      s.ph = s.h;
+      s.pp = s.p;
+    }
+
+    // rows: enter, leave, done
+    let entering = false;
+    for (const row of rows.values()) {
+      if (row.delay &gt; 0) { row.delay--; entering = true; continue; }
+      const e = approach(row.e, row.te, k * .8);
+      const d = approach(row.d, row.td, k * .9);
+      if (e !== row.e) row.li.style.setProperty(&#x27;--e&#x27;, e.toFixed(3));
+      if (d !== row.d) row.li.style.setProperty(&#x27;--d&#x27;, d.toFixed(3));
+      row.e = e;
+      row.d = d;
+      if (row.te === 1 &amp;&amp; e &lt; 1) entering = true;
+
+      if (row.te === 0 &amp;&amp; e === 0) {          // finished leaving
+        row.tracked.forEach((s) =&gt; states.delete(s));
+        row.li.remove();
+        rows.delete(row.task.id);
+      }
+    }
+    if (stickToEnd) {
+      list.scrollTop = list.scrollHeight;
+      if (!entering) stickToEnd = false;
+    }
+
+    // &quot;No tasks yet&quot; fades in when nothing is left
+    const nothing = tasks.length === 0;
+    const v = approach(emptyV, nothing ? 1 : 0, k);
+    if (v !== emptyV) empty.style.setProperty(&#x27;--v&#x27;, v.toFixed(3));
+    emptyV = v;
+
+    // shake + red outline when the input is empty
+    if (shake &gt; .01) {
+      shake *= .88;
+      const dx = Math.sin(frame * 1.1) * shake * 10;
+      input.style.transform = `translateX(${dx}px)`;
+    } else if (input.style.transform) {
+      shake = 0;
+      input.style.transform = &#x27;&#x27;;
+    }
+    if (badFrames &gt; 0) badFrames--;
+    input.classList.toggle(&#x27;bad&#x27;, badFrames &gt; 0);
+
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- 11. Start ---------- */
+  load();
+  soundBtn.setAttribute(&#x27;aria-pressed&#x27;, String(soundOn));
+  soundBtn.setAttribute(&#x27;aria-label&#x27;, soundOn ? &#x27;Sound on&#x27; : &#x27;Sound off&#x27;);
+  soundBtn.classList.toggle(&#x27;muted&#x27;, !soundOn);
+  tasks.forEach((t, i) =&gt; createRow(t, i * 6));
+  emptyV = tasks.length ? 0 : 1;
+  empty.style.setProperty(&#x27;--v&#x27;, String(emptyV));
+  requestAnimationFrame(tick);
+})();
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+  </section>
+
+  <section class="panel code" aria-label="Source code">
+    <div class="bar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <div class="tabs" role="tablist" aria-label="Files">
+        <button class="tab on" role="tab" data-key="html" aria-selected="true">
+          <svg><use href="#i-html"/></svg>HTML</button>
+        <button class="tab" role="tab" data-key="css" aria-selected="false">
+          <svg><use href="#i-css"/></svg>CSS</button>
+        <button class="tab" role="tab" data-key="js" aria-selected="false">
+          <svg><use href="#i-js"/></svg>JS</button>
+      </div>
+      <span class="file" id="fileName">index.html</span>
+      <button class="copy" id="copyBtn" type="button">Copy</button>
+    </div>
+    <div class="area" id="area" tabindex="0">
+<pre data-key="html"><code><span class="c">&lt;!DOCTYPE html&gt;
+</span><span class="t">&lt;html </span><span class="a">lang</span>=<span class="s">"en"</span><span class="t">&gt;
+&lt;head&gt;
+  &lt;meta </span><span class="a">charset</span>=<span class="s">"UTF-8"</span><span class="t">&gt;
+  &lt;meta </span><span class="a">name</span>=<span class="s">"viewport" </span><span class="a">content</span>=<span class="s">"width=device-width, initial-scale=1"</span><span class="t">&gt;
+  &lt;title&gt;</span>To Do app | @stackanddstyle<span class="t">&lt;/title&gt;
+  &lt;link </span><span class="a">rel</span>=<span class="s">"stylesheet" </span><span class="a">href</span>=<span class="s">"style.css"</span><span class="t">&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  &lt;main </span><span class="a">class</span>=<span class="s">"stage"</span><span class="t">&gt;
+
+    </span><span class="c">&lt;!-- The To Do card --&gt;
+    </span><span class="t">&lt;section </span><span class="a">class</span>=<span class="s">"card" </span><span class="a">aria-labelledby</span>=<span class="s">"title"</span><span class="t">&gt;
+
+      &lt;header </span><span class="a">class</span>=<span class="s">"card-head"</span><span class="t">&gt;
+        </span><span class="c">&lt;!-- Sound on / off (M) --&gt;
+        </span><span class="t">&lt;button </span><span class="a">class</span>=<span class="s">"btn round tool" </span><span class="a">id</span>=<span class="s">"soundBtn" </span><span class="a">type</span>=<span class="s">"button"
+                </span><span class="a">aria-pressed</span>=<span class="s">"true" </span><span class="a">aria-label</span>=<span class="s">"Sound" </span><span class="a">title</span>=<span class="s">"Sound (M)"</span><span class="t">&gt;
+          &lt;svg </span><span class="a">class</span>=<span class="s">"i-on" </span><span class="a">viewBox</span>=<span class="s">"0 0 24 24" </span><span class="a">aria-hidden</span>=<span class="s">"true"</span><span class="t">&gt;
+            &lt;polygon </span><span class="a">points</span>=<span class="s">"11 5 6 9 2 9 2 15 6 15 11 19 11 5"</span><span class="t">/&gt;
+            &lt;path </span><span class="a">d</span>=<span class="s">"M15.5 8.5a5 5 0 0 1 0 7"</span><span class="t">/&gt;
+            &lt;path </span><span class="a">d</span>=<span class="s">"M19 5a10 10 0 0 1 0 14"</span><span class="t">/&gt;
+          &lt;/svg&gt;
+          &lt;svg </span><span class="a">class</span>=<span class="s">"i-off" </span><span class="a">viewBox</span>=<span class="s">"0 0 24 24" </span><span class="a">aria-hidden</span>=<span class="s">"true"</span><span class="t">&gt;
+            &lt;polygon </span><span class="a">points</span>=<span class="s">"11 5 6 9 2 9 2 15 6 15 11 19 11 5"</span><span class="t">/&gt;
+            &lt;line </span><span class="a">x1</span>=<span class="s">"23" </span><span class="a">y1</span>=<span class="s">"9" </span><span class="a">x2</span>=<span class="s">"17" </span><span class="a">y2</span>=<span class="s">"15"</span><span class="t">/&gt;
+            &lt;line </span><span class="a">x1</span>=<span class="s">"17" </span><span class="a">y1</span>=<span class="s">"9" </span><span class="a">x2</span>=<span class="s">"23" </span><span class="a">y2</span>=<span class="s">"15"</span><span class="t">/&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+
+        &lt;h1 </span><span class="a">id</span>=<span class="s">"title"</span><span class="t">&gt;</span>ToDo List<span class="t">&lt;/h1&gt;
+
+        </span><span class="c">&lt;!-- Reset everything (R) --&gt;
+        </span><span class="t">&lt;button </span><span class="a">class</span>=<span class="s">"btn round tool" </span><span class="a">id</span>=<span class="s">"resetBtn" </span><span class="a">type</span>=<span class="s">"button"
+                </span><span class="a">aria-label</span>=<span class="s">"Reset" </span><span class="a">title</span>=<span class="s">"Reset (R)"</span><span class="t">&gt;
+          &lt;svg </span><span class="a">viewBox</span>=<span class="s">"0 0 24 24" </span><span class="a">aria-hidden</span>=<span class="s">"true"</span><span class="t">&gt;
+            &lt;polyline </span><span class="a">points</span>=<span class="s">"1 4 1 10 7 10"</span><span class="t">/&gt;
+            &lt;path </span><span class="a">d</span>=<span class="s">"M3.5 15a9 9 0 1 0 2.1-9.4L1 10"</span><span class="t">/&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+      &lt;/header&gt;
+
+      </span><span class="c">&lt;!-- Add a task --&gt;
+      </span><span class="t">&lt;form </span><span class="a">class</span>=<span class="s">"add" </span><span class="a">id</span>=<span class="s">"addForm" </span><span class="a">autocomplete</span>=<span class="s">"off"</span><span class="t">&gt;
+        &lt;label </span><span class="a">class</span>=<span class="s">"sr" </span><span class="a">for</span>=<span class="s">"taskInput"</span><span class="t">&gt;</span>New task<span class="t">&lt;/label&gt;
+        &lt;input </span><span class="a">class</span>=<span class="s">"field" </span><span class="a">id</span>=<span class="s">"taskInput" </span><span class="a">type</span>=<span class="s">"text" </span><span class="a">maxlength</span>=<span class="s">"40"
+               </span><span class="a">placeholder</span>=<span class="s">"Enter a task..."</span><span class="t">&gt;
+        &lt;button </span><span class="a">class</span>=<span class="s">"btn round add-btn" </span><span class="a">type</span>=<span class="s">"submit" </span><span class="a">aria-label</span>=<span class="s">"Add task"</span><span class="t">&gt;
+          &lt;svg </span><span class="a">viewBox</span>=<span class="s">"0 0 24 24" </span><span class="a">aria-hidden</span>=<span class="s">"true"</span><span class="t">&gt;
+            &lt;path </span><span class="a">d</span>=<span class="s">"M12 5v14M5 12h14"</span><span class="t">/&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+      &lt;/form&gt;
+
+      </span><span class="c">&lt;!-- Tasks are created by script.js --&gt;
+      </span><span class="t">&lt;ul </span><span class="a">class</span>=<span class="s">"list" </span><span class="a">id</span>=<span class="s">"list" </span><span class="a">aria-label</span>=<span class="s">"Tasks"</span><span class="t">&gt;&lt;/ul&gt;
+
+      &lt;p </span><span class="a">class</span>=<span class="s">"empty" </span><span class="a">id</span>=<span class="s">"empty"</span><span class="t">&gt;</span>No tasks yet<span class="t">&lt;/p&gt;
+
+      &lt;button </span><span class="a">class</span>=<span class="s">"btn clear" </span><span class="a">id</span>=<span class="s">"clearBtn" </span><span class="a">type</span>=<span class="s">"button"</span><span class="t">&gt;
+        &lt;svg </span><span class="a">viewBox</span>=<span class="s">"0 0 24 24" </span><span class="a">aria-hidden</span>=<span class="s">"true"</span><span class="t">&gt;
+          &lt;polyline </span><span class="a">points</span>=<span class="s">"3 6 5 6 21 6"</span><span class="t">/&gt;
+          &lt;path </span><span class="a">d</span>=<span class="s">"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"</span><span class="t">/&gt;
+          &lt;path </span><span class="a">d</span>=<span class="s">"M10 11v6M14 11v6"</span><span class="t">/&gt;
+          &lt;path </span><span class="a">d</span>=<span class="s">"M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"</span><span class="t">/&gt;
+        &lt;/svg&gt;</span>
+        Clear All
+      <span class="t">&lt;/button&gt;
+    &lt;/section&gt;
+
+    &lt;p </span><span class="a">class</span>=<span class="s">"hint"</span><span class="t">&gt;
+      &lt;kbd&gt;</span>Enter<span class="t">&lt;/kbd&gt;</span> add <span class="n">&amp;nbsp;</span>·<span class="n">&amp;nbsp; </span><span class="t">&lt;kbd&gt;</span>/<span class="t">&lt;/kbd&gt;</span> focus <span class="n">&amp;nbsp;</span>·<span class="n">&amp;nbsp;
+      </span><span class="t">&lt;kbd&gt;</span>R<span class="t">&lt;/kbd&gt;</span> reset <span class="n">&amp;nbsp;</span>·<span class="n">&amp;nbsp; </span><span class="t">&lt;kbd&gt;</span>M<span class="t">&lt;/kbd&gt;</span> sound
+    <span class="t">&lt;/p&gt;
+  &lt;/main&gt;
+
+  &lt;p </span><span class="a">class</span>=<span class="s">"credit"</span><span class="t">&gt;</span>Created by <span class="t">&lt;b&gt;</span>@stackanddstyle<span class="t">&lt;/b&gt;&lt;/p&gt;
+
+  &lt;script </span><span class="a">src</span>=<span class="s">"script.js"</span><span class="t">&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</span></code></pre>
+<pre data-key="css" hidden><code><span class="c">/* =====================================================
+   To Do app  |  Created by @stackanddstyle
+   Motion (hover, press, add, remove, tick) is driven by script.js, which
+   sets the custom properties --h, --p, --e, --d and --v every frame.
+   There are no CSS transitions or keyframes on purpose.
+   ===================================================== */
+
+/* ============ CHANGE COLORS HERE ============ */
+</span>:<span class="t">root </span>{
+  <span class="a">--bg-a</span>: <span class="n">#f6f8fc</span>;            <span class="c">/* page gradient start */
+  </span><span class="a">--bg-b</span>: <span class="n">#e8ecf5</span>;            <span class="c">/* page gradient end */
+  </span><span class="a">--surface</span>: <span class="n">#f1f4fa</span>;         <span class="c">/* card, rows and buttons */
+  </span><span class="a">--ink</span>: <span class="n">#0f172a</span>;             <span class="c">/* main text */
+  </span><span class="a">--hint</span>: <span class="n">#7a86a1</span>;            <span class="c">/* soft text */
+  </span><span class="a">--accent</span>: <span class="n">#4f6bd6</span>;          <span class="c">/* plus, edit, focus glow */
+  </span><span class="a">--accent-rgb</span>: <span class="n">79 107 214</span>;
+  <span class="a">--danger</span>: <span class="n">#e5484d</span>;          <span class="c">/* delete, clear all */
+  </span><span class="a">--danger-rgb</span>: <span class="n">229 72 77</span>;
+  <span class="a">--ok-rgb</span>: <span class="n">34 176 125</span>;       <span class="c">/* finished task */
+  </span><span class="a">--focus</span>: <span class="n">#2563eb</span>;           <span class="c">/* keyboard focus ring */
+  </span><span class="a">--sh-dark</span>: <span class="n">163 177 198</span>;     <span class="c">/* neumorphic shadow, dark side */
+  </span><span class="a">--sh-light</span>: <span class="n">255 255 255</span>;    <span class="c">/* neumorphic shadow, light side */
+  </span><span class="a">--credit-bg</span>: <span class="n">#0f1f44</span>;
+  <span class="a">--credit-ink</span>: <span class="n">#ffffff</span>;
+}
+
+<span class="c">/* ---------- Base ---------- */
+</span>*, *::<span class="t">before</span>, *::<span class="t">after </span>{ <span class="p">box-sizing</span>: <span class="k">border-box</span>; }
+
+<span class="t">html </span>{
+  <span class="c">/* 1rem = 16px when the demo is about 1024px wide */
+  </span><span class="p">font-size</span>: <span class="f">clamp</span>(<span class="n">11px</span>, <span class="n">1.5625vw</span>, <span class="n">18px</span>);
+}
+
+<span class="t">body </span>{
+  <span class="p">margin</span>: <span class="n">0</span>;
+  <span class="p">min-height</span>: <span class="n">100vh</span>;
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--ink</span>);
+  <span class="p">font-family</span>: <span class="s">"Segoe UI"</span>, Inter, system-ui, -apple-system, Roboto,
+               Arial, <span class="k">sans-serif</span>;
+  <span class="p">background</span>:
+    <span class="f">radial-gradient</span>(<span class="n">60rem 40rem </span>at <span class="n">50% -10%</span>, <span class="n">#ffffff 0%</span>, <span class="k">transparent </span><span class="n">70%</span>),
+    <span class="f">linear-gradient</span>(<span class="n">160deg</span>, <span class="f">var</span>(<span class="a">--bg-a</span>), <span class="f">var</span>(<span class="a">--bg-b</span>));
+  <span class="p">background-attachment</span>: <span class="k">fixed</span>;
+}
+
+.<span class="t">sr </span>{
+  <span class="p">position</span>: <span class="k">absolute</span>; <span class="p">width</span>: <span class="n">1px</span>; <span class="p">height</span>: <span class="n">1px</span>; <span class="p">overflow</span>: <span class="k">hidden</span>;
+  <span class="p">clip</span>: <span class="f">rect</span>(<span class="n">0 0 0 0</span>); <span class="p">white-space</span>: <span class="k">nowrap</span>;
+}
+
+<span class="c">/* Content starts at the top, with room below for the credit pill */
+</span>.<span class="t">stage </span>{
+  <span class="p">min-height</span>: <span class="n">100vh</span>;
+  <span class="p">display</span>: <span class="k">flex</span>;
+  <span class="p">flex-direction</span>: <span class="k">column</span>;
+  <span class="p">align-items</span>: <span class="k">center</span>;
+  <span class="p">justify-content</span>: <span class="k">flex-start</span>;
+  <span class="p">padding</span>: <span class="n">1.4rem 1rem 6rem</span>;
+}
+
+<span class="c">/* ---------- Card ---------- */
+</span>.<span class="t">card </span>{
+  <span class="p">width</span>: <span class="f">min</span>(<span class="n">100%</span>, <span class="n">54rem</span>);
+  <span class="p">padding</span>: <span class="n">1.6rem 1.8rem 1.7rem</span>;
+  <span class="p">border-radius</span>: <span class="n">2.2rem</span>;
+  <span class="p">background</span>: <span class="f">var</span>(<span class="a">--surface</span>);
+  <span class="p">box-shadow</span>:
+    <span class="n">1.3rem 1.3rem 2.8rem </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-dark</span>) / <span class="n">.55</span>),
+    <span class="n">-1rem -1rem 2.2rem </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-light</span>) / <span class="n">.95</span>);
+}
+
+.<span class="t">card-head </span>{
+  <span class="p">display</span>: <span class="k">flex</span>;
+  <span class="p">align-items</span>: <span class="k">center</span>;
+  <span class="p">justify-content</span>: <span class="k">space-between</span>;
+  <span class="p">margin-bottom</span>: <span class="n">1.3rem</span>;
+}
+
+<span class="t">h1 </span>{
+  <span class="p">margin</span>: <span class="n">0</span>;
+  <span class="p">font-size</span>: <span class="n">2.5rem</span>;
+  <span class="p">font-weight</span>: <span class="n">800</span>;
+  <span class="p">letter-spacing</span>: <span class="n">-.01em</span>;
+}
+
+<span class="c">/* ---------- Raised neumorphic look (buttons + rows) ----------
+   --h = hover amount (0 to 1), --p = pressed amount (0 to 1).
+   Pressed turns the outer shadow into an inner one. */
+</span>.<span class="t">btn</span>, .<span class="t">item </span>{
+  <span class="a">--h</span>: <span class="n">0</span>;
+  <span class="a">--p</span>: <span class="n">0</span>;
+  <span class="a">--o</span>: <span class="n">5px</span>;
+  <span class="p">box-shadow</span>:
+    <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) + <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">2px</span>) <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) + <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">2px</span>)
+      <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">2 </span>+ <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">4px</span>)
+      <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-dark</span>) / <span class="f">calc</span>(<span class="n">.55 </span>* (<span class="n">1 </span>- <span class="f">var</span>(<span class="a">--p</span>)))),
+    <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">-1 </span>- <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">2px</span>)
+      <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">-1 </span>- <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">2px</span>)
+      <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">2 </span>+ <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">4px</span>)
+      <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-light</span>) / <span class="f">calc</span>(<span class="n">1 </span>- <span class="f">var</span>(<span class="a">--p</span>))),
+    <span class="k">inset </span><span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">.6</span>) <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">.6</span>) <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">1.2</span>)
+      <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-dark</span>) / <span class="f">calc</span>(<span class="n">.6 </span>* <span class="f">var</span>(<span class="a">--p</span>))),
+    <span class="k">inset </span><span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">-.6</span>) <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">-.6</span>) <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--o</span>) * <span class="n">1.2</span>)
+      <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-light</span>) / <span class="f">calc</span>(<span class="n">.9 </span>* <span class="f">var</span>(<span class="a">--p</span>)));
+}
+
+.<span class="t">btn </span>{
+  <span class="p">border</span>: <span class="n">0</span>;
+  <span class="p">padding</span>: <span class="n">0</span>;
+  <span class="p">cursor</span>: <span class="k">pointer</span>;
+  <span class="p">font</span>: <span class="k">inherit</span>;
+  <span class="p">background</span>: <span class="f">var</span>(<span class="a">--surface</span>);
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--accent</span>);
+  <span class="p">display</span>: <span class="k">inline</span>-<span class="p">grid</span>;
+  <span class="p">place-items</span>: <span class="k">center</span>;
+  <span class="p">transform</span>: <span class="f">translateY</span>(<span class="f">calc</span>(<span class="f">var</span>(<span class="a">--h</span>) * <span class="n">-2px</span>))
+             <span class="f">scale</span>(<span class="f">calc</span>(<span class="n">1 </span>+ <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">.06 </span>- <span class="f">var</span>(<span class="a">--p</span>) * <span class="n">.08</span>));
+}
+
+.<span class="t">btn svg</span>, .<span class="t">check svg </span>{
+  <span class="p">width</span>: <span class="n">48%</span>;
+  <span class="p">height</span>: <span class="n">48%</span>;
+  <span class="p">fill</span>: <span class="k">none</span>;
+  <span class="p">stroke</span>: <span class="k">currentColor</span>;
+  <span class="p">stroke-width</span>: <span class="n">2.2</span>;
+  <span class="p">stroke-linecap</span>: <span class="k">round</span>;
+  <span class="p">stroke-linejoin</span>: <span class="k">round</span>;
+  <span class="p">pointer-events</span>: <span class="k">none</span>;
+}
+
+.<span class="t">round </span>{
+  <span class="p">width</span>: <span class="f">var</span>(<span class="a">--size</span>, <span class="n">4rem</span>);
+  <span class="p">height</span>: <span class="f">var</span>(<span class="a">--size</span>, <span class="n">4rem</span>);
+  <span class="p">border-radius</span>: <span class="n">50%</span>;
+}
+
+.<span class="t">tool    </span>{ <span class="a">--size</span>: <span class="n">3.6rem</span>; <span class="a">--o</span>: <span class="n">4px</span>; <span class="p">color</span>: <span class="f">var</span>(<span class="a">--hint</span>); }
+.<span class="t">add-btn </span>{ <span class="a">--size</span>: <span class="n">4.6rem</span>; }
+.<span class="t">edit</span>, .<span class="t">del </span>{ <span class="a">--size</span>: <span class="n">3.9rem</span>; <span class="a">--o</span>: <span class="n">4px</span>; }
+.<span class="t">edit </span>{ <span class="p">color</span>: <span class="f">var</span>(<span class="a">--accent</span>); }
+.<span class="t">del  </span>{ <span class="p">color</span>: <span class="f">var</span>(<span class="a">--danger</span>); }
+
+<span class="c">/* Sound button: show the right icon */
+</span>.<span class="t">tool </span>.<span class="t">i-off </span>{ <span class="p">display</span>: <span class="k">none</span>; }
+.<span class="t">muted </span>.<span class="t">i-on </span>{ <span class="p">display</span>: <span class="k">none</span>; }
+.<span class="t">muted </span>.<span class="t">i-off </span>{ <span class="p">display</span>: <span class="k">block</span>; }
+
+<span class="c">/* ---------- Add field (sunken) ---------- */
+</span>.<span class="t">add </span>{
+  <span class="p">display</span>: <span class="k">flex</span>;
+  <span class="p">align-items</span>: <span class="k">center</span>;
+  <span class="p">gap</span>: <span class="n">1.1rem</span>;
+  <span class="p">margin-bottom</span>: <span class="n">1.2rem</span>;
+}
+
+.<span class="t">field </span>{
+  <span class="a">--h</span>: <span class="n">0</span>;
+  <span class="p">flex</span>: <span class="n">1</span>;
+  <span class="p">min-width</span>: <span class="n">0</span>;
+  <span class="p">height</span>: <span class="n">4.6rem</span>;
+  <span class="p">padding</span>: <span class="n">0 1.4rem</span>;
+  <span class="p">border</span>: <span class="n">0</span>;
+  <span class="p">border-radius</span>: <span class="n">1.5rem</span>;
+  <span class="p">background</span>: <span class="f">var</span>(<span class="a">--surface</span>);
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--ink</span>);
+  <span class="p">font-size</span>: <span class="n">1.8rem</span>;
+  <span class="p">font-weight</span>: <span class="n">500</span>;
+  <span class="p">font-family</span>: <span class="k">inherit</span>;
+  <span class="p">outline</span>: <span class="k">none</span>;
+  <span class="p">box-shadow</span>:
+    <span class="k">inset </span><span class="n">.4rem .4rem .9rem </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-dark</span>) / <span class="n">.6</span>),
+    <span class="k">inset </span><span class="n">-.4rem -.4rem .9rem </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-light</span>) / <span class="n">.95</span>),
+    <span class="n">0 0 0 </span><span class="f">calc</span>(<span class="f">var</span>(<span class="a">--h</span>) * <span class="n">.28rem</span>) <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--accent-rgb</span>) / <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--h</span>) * <span class="n">.45</span>));
+}
+.<span class="t">field</span>::<span class="t">placeholder </span>{ <span class="p">color</span>: <span class="f">var</span>(<span class="a">--hint</span>); <span class="p">opacity</span>: <span class="n">.9</span>; }
+.<span class="t">field</span>.<span class="t">bad </span>{ <span class="p">outline</span>: <span class="n">.22rem </span><span class="k">solid </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--danger-rgb</span>) / <span class="n">.7</span>); }
+
+<span class="c">/* ---------- Task list ---------- */
+</span>.<span class="t">list </span>{
+  <span class="p">list-style</span>: <span class="k">none</span>;
+  <span class="p">margin</span>: <span class="n">0 -1rem</span>;
+  <span class="p">padding</span>: <span class="n">.9rem 1rem .2rem</span>;
+  <span class="p">max-height</span>: <span class="n">27rem</span>;
+  <span class="p">overflow-y</span>: <span class="k">auto</span>;
+  <span class="p">overscroll-behavior</span>: <span class="k">contain</span>;
+  <span class="p">scrollbar-width</span>: <span class="k">thin</span>;
+  <span class="p">scrollbar-color</span>: <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-dark</span>) / <span class="n">.8</span>) <span class="k">transparent</span>;
+}
+
+<span class="c">/* --e = enter/exit amount (0 to 1), --d = done amount (0 to 1) */
+</span>.<span class="t">item </span>{
+  <span class="a">--e</span>: <span class="n">1</span>;
+  <span class="a">--d</span>: <span class="n">0</span>;
+  <span class="a">--row</span>: <span class="n">5.4rem</span>;
+  <span class="a">--gap</span>: <span class="n">1rem</span>;
+  <span class="a">--o</span>: <span class="n">4px</span>;
+  <span class="p">display</span>: <span class="k">flex</span>;
+  <span class="p">align-items</span>: <span class="k">center</span>;
+  <span class="p">gap</span>: <span class="n">1rem</span>;
+  <span class="p">height</span>: <span class="f">var</span>(<span class="a">--row</span>);
+  <span class="p">padding</span>: <span class="n">0 .75rem 0 1rem</span>;
+  <span class="p">border-radius</span>: <span class="n">1.6rem</span>;
+  <span class="p">background</span>: <span class="f">var</span>(<span class="a">--surface</span>);
+  <span class="p">opacity</span>: <span class="f">var</span>(<span class="a">--e</span>);
+  <span class="c">/* a leaving row also pulls the rows below it up */
+  </span><span class="p">margin-bottom</span>: <span class="f">calc</span>((<span class="f">var</span>(<span class="a">--e</span>) - <span class="n">1</span>) * <span class="f">var</span>(<span class="a">--row</span>) + <span class="f">var</span>(<span class="a">--e</span>) * <span class="f">var</span>(<span class="a">--gap</span>));
+  <span class="p">transform</span>: <span class="f">translateY</span>(<span class="f">calc</span>((<span class="n">1 </span>- <span class="f">var</span>(<span class="a">--e</span>)) * <span class="n">1.2rem </span>- <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">2px</span>))
+             <span class="f">scale</span>(<span class="f">calc</span>(<span class="n">.94 </span>+ <span class="n">.06 </span>* <span class="f">var</span>(<span class="a">--e</span>) + <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">.01</span>));
+}
+
+.<span class="t">text </span>{
+  <span class="p">position</span>: <span class="k">relative</span>;
+  <span class="p">margin-right</span>: <span class="k">auto</span>;
+  <span class="p">min-width</span>: <span class="n">0</span>;
+  <span class="p">overflow</span>: <span class="k">hidden</span>;
+  <span class="p">text-overflow</span>: <span class="k">ellipsis</span>;
+  <span class="p">white-space</span>: <span class="k">nowrap</span>;
+  <span class="p">font-size</span>: <span class="n">1.85rem</span>;
+  <span class="p">font-weight</span>: <span class="n">500</span>;
+  <span class="p">cursor</span>: <span class="k">pointer</span>;
+  <span class="p">color</span>: <span class="f">color-mix</span>(in srgb, <span class="f">var</span>(<span class="a">--hint</span>) <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--d</span>) * <span class="n">100%</span>), <span class="f">var</span>(<span class="a">--ink</span>));
+}
+<span class="c">/* strike-through line grows with --d */
+</span>.<span class="t">text</span>::<span class="t">after </span>{
+  <span class="p">content</span>: <span class="s">""</span>;
+  <span class="p">position</span>: <span class="k">absolute</span>;
+  <span class="p">left</span>: <span class="n">0</span>;
+  <span class="p">top</span>: <span class="n">55%</span>;
+  <span class="p">height</span>: <span class="n">.2rem</span>;
+  <span class="p">width</span>: <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--d</span>) * <span class="n">100%</span>);
+  <span class="p">border-radius</span>: <span class="n">1rem</span>;
+  <span class="p">background</span>: <span class="k">currentColor</span>;
+}
+
+.<span class="t">edit-input </span>{
+  <span class="p">flex</span>: <span class="n">1</span>;
+  <span class="p">min-width</span>: <span class="n">0</span>;
+  <span class="p">height</span>: <span class="n">3.6rem</span>;
+  <span class="p">padding</span>: <span class="n">0 .4rem</span>;
+  <span class="p">border</span>: <span class="n">0</span>;
+  <span class="p">border-bottom</span>: <span class="n">.2rem </span><span class="k">solid </span><span class="f">var</span>(<span class="a">--accent</span>);
+  <span class="p">background</span>: <span class="k">transparent</span>;
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--ink</span>);
+  <span class="p">font-size</span>: <span class="n">1.85rem</span>;
+  <span class="p">font-weight</span>: <span class="n">500</span>;
+  <span class="p">font-family</span>: <span class="k">inherit</span>;
+  <span class="p">outline</span>: <span class="k">none</span>;
+}
+
+<span class="c">/* Round tick box on the left of every task */
+</span>.<span class="t">check </span>{
+  <span class="a">--h</span>: <span class="n">0</span>;
+  <span class="p">flex</span>: <span class="k">none</span>;
+  <span class="p">width</span>: <span class="n">3.2rem</span>;
+  <span class="p">height</span>: <span class="n">3.2rem</span>;
+  <span class="p">padding</span>: <span class="n">0</span>;
+  <span class="p">border</span>: <span class="n">0</span>;
+  <span class="p">border-radius</span>: <span class="n">50%</span>;
+  <span class="p">cursor</span>: <span class="k">pointer</span>;
+  <span class="p">display</span>: <span class="p">grid</span>;
+  <span class="p">place-items</span>: <span class="k">center</span>;
+  <span class="p">color</span>: <span class="n">#fff</span>;
+  <span class="p">background</span>: <span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--ok-rgb</span>) / <span class="f">var</span>(<span class="a">--d</span>));
+  <span class="p">transform</span>: <span class="f">scale</span>(<span class="f">calc</span>(<span class="n">1 </span>+ <span class="f">var</span>(<span class="a">--h</span>) * <span class="n">.1</span>));
+  <span class="p">box-shadow</span>:
+    <span class="k">inset </span><span class="n">.3rem .3rem .6rem </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-dark</span>) / <span class="f">calc</span>(<span class="n">.8 </span>- <span class="f">var</span>(<span class="a">--d</span>) * <span class="n">.4</span>)),
+    <span class="k">inset </span><span class="n">-.3rem -.3rem .6rem </span><span class="f">rgb</span>(<span class="f">var</span>(<span class="a">--sh-light</span>) / <span class="f">calc</span>(<span class="n">1 </span>- <span class="f">var</span>(<span class="a">--d</span>) * <span class="n">.6</span>));
+}
+.<span class="t">check svg </span>{
+  <span class="p">width</span>: <span class="n">62%</span>;
+  <span class="p">height</span>: <span class="n">62%</span>;
+  <span class="p">stroke-width</span>: <span class="n">3</span>;
+  <span class="p">opacity</span>: <span class="f">var</span>(<span class="a">--d</span>);
+  <span class="p">transform</span>: <span class="f">scale</span>(<span class="f">calc</span>(<span class="n">.4 </span>+ <span class="f">var</span>(<span class="a">--d</span>) * <span class="n">.6</span>));
+}
+
+<span class="c">/* Edit button swaps its pencil for a tick while editing */
+</span>.<span class="t">edit </span>.<span class="t">i-save </span>{ <span class="p">display</span>: <span class="k">none</span>; }
+.<span class="t">editing </span>.<span class="t">edit </span>.<span class="t">i-edit </span>{ <span class="p">display</span>: <span class="k">none</span>; }
+.<span class="t">editing </span>.<span class="t">edit </span>.<span class="t">i-save </span>{ <span class="p">display</span>: <span class="k">block</span>; }
+
+<span class="c">/* ---------- Empty state + Clear All ---------- */
+</span>.<span class="t">empty </span>{
+  <span class="a">--v</span>: <span class="n">1</span>;
+  <span class="p">margin</span>: <span class="n">0</span>;
+  <span class="p">height</span>: <span class="f">calc</span>(<span class="f">var</span>(<span class="a">--v</span>) * <span class="n">5rem</span>);
+  <span class="p">opacity</span>: <span class="f">var</span>(<span class="a">--v</span>);
+  <span class="p">overflow</span>: <span class="k">hidden</span>;
+  <span class="p">display</span>: <span class="p">grid</span>;
+  <span class="p">place-items</span>: <span class="k">center</span>;
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--hint</span>);
+  <span class="p">font-size</span>: <span class="n">1.75rem</span>;
+}
+
+.<span class="t">clear </span>{
+  <span class="a">--o</span>: <span class="n">4px</span>;
+  <span class="p">display</span>: <span class="k">flex</span>;
+  <span class="p">align-items</span>: <span class="k">center</span>;
+  <span class="p">gap</span>: <span class="n">.7rem</span>;
+  <span class="p">height</span>: <span class="n">4.2rem</span>;
+  <span class="p">margin</span>: <span class="n">.7rem </span><span class="k">auto </span><span class="n">0</span>;
+  <span class="p">padding</span>: <span class="n">0 2rem</span>;
+  <span class="p">border-radius</span>: <span class="n">1.4rem</span>;
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--danger</span>);
+  <span class="p">font-size</span>: <span class="n">1.75rem</span>;
+  <span class="p">font-weight</span>: <span class="n">600</span>;
+}
+.<span class="t">clear svg </span>{ <span class="p">width</span>: <span class="n">1.9rem</span>; <span class="p">height</span>: <span class="n">1.9rem</span>; }
+
+<span class="c">/* ---------- Hint + credit ---------- */
+</span>.<span class="t">hint </span>{
+  <span class="p">margin</span>: <span class="n">1.2rem 0 0</span>;
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--hint</span>);
+  <span class="p">font-size</span>: <span class="n">1.7rem</span>;
+  <span class="p">text-align</span>: <span class="k">center</span>;
+}
+<span class="t">kbd </span>{ <span class="p">font</span>: <span class="k">inherit</span>; <span class="p">font-weight</span>: <span class="n">700</span>; <span class="p">color</span>: <span class="f">var</span>(<span class="a">--ink</span>); }
+
+.<span class="t">credit </span>{
+  <span class="p">position</span>: <span class="k">fixed</span>;
+  <span class="p">right</span>: <span class="n">1rem</span>;
+  <span class="p">bottom</span>: <span class="n">1rem</span>;
+  <span class="p">margin</span>: <span class="n">0</span>;
+  <span class="p">padding</span>: <span class="n">.55rem 1.3rem</span>;
+  <span class="p">border-radius</span>: <span class="n">999px</span>;
+  <span class="p">background</span>: <span class="f">var</span>(<span class="a">--credit-bg</span>);
+  <span class="p">color</span>: <span class="f">var</span>(<span class="a">--credit-ink</span>);
+  <span class="p">font-size</span>: <span class="n">1.5rem</span>;
+  <span class="p">box-shadow</span>: <span class="n">0 .4rem 1.2rem </span><span class="f">rgb</span>(<span class="n">15 31 68 </span>/ <span class="n">.3</span>);
+}
+.<span class="t">credit b </span>{ <span class="p">font-weight</span>: <span class="n">700</span>; }
+
+<span class="c">/* ---------- Keyboard focus ---------- */
+</span>:<span class="t">focus-visible </span>{
+  <span class="p">outline</span>: <span class="n">.22rem </span><span class="k">solid </span><span class="f">var</span>(<span class="a">--focus</span>);
+  <span class="p">outline-offset</span>: <span class="n">.25rem</span>;
+}
+.<span class="t">field</span>:<span class="t">focus-visible</span>, .<span class="t">edit-input</span>:<span class="t">focus-visible </span>{ <span class="p">outline-offset</span>: <span class="n">.1rem</span>; }
+.<span class="t">edit-input</span>:<span class="t">focus-visible </span>{ <span class="p">outline</span>: <span class="k">none</span>; }
+
+<span class="c">/* ---------- Small screens ---------- */
+</span>@<span class="p">media </span>(<span class="t">max-width</span>: <span class="t">480px</span>) {
+  .<span class="t">stage </span>{ <span class="p">padding-top</span>: <span class="n">1rem</span>; }
+  .<span class="t">card </span>{ <span class="p">padding</span>: <span class="n">1.2rem 1.1rem 1.3rem</span>; }
+  <span class="t">h1 </span>{ <span class="p">font-size</span>: <span class="n">2.1rem</span>; }
+}</code></pre>
+<pre data-key="js" hidden><code><span class="c">/* =====================================================
+   To Do app  |  Created by @stackanddstyle
+   Plain JavaScript. ONE requestAnimationFrame loop eases every value
+   (hover, press, add, remove, done) toward its target once per frame.
+   Keys:  Enter add | / focus | R reset | M sound | arrows move | Del remove
+   ===================================================== */
+</span>(() =&gt; {
+  <span class="s">'use strict'</span>;
+
+  <span class="c">/* ---------- 1. Settings and elements ---------- */
+  </span><span class="k">const </span>STORE_KEY = <span class="s">'stackanddstyle-todo-v1'</span>;
+  <span class="k">const </span>MAX_TASKS = <span class="n">30</span>;
+
+  <span class="k">const </span>$ = (sel) =&gt; document.<span class="f">querySelector</span>(sel);
+  <span class="k">const </span>list = <span class="f">$</span>(<span class="s">'#list'</span>);
+  <span class="k">const </span>empty = <span class="f">$</span>(<span class="s">'#empty'</span>);
+  <span class="k">const </span>input = <span class="f">$</span>(<span class="s">'#taskInput'</span>);
+  <span class="k">const </span>form = <span class="f">$</span>(<span class="s">'#addForm'</span>);
+  <span class="k">const </span>clearBtn = <span class="f">$</span>(<span class="s">'#clearBtn'</span>);
+  <span class="k">const </span>resetBtn = <span class="f">$</span>(<span class="s">'#resetBtn'</span>);
+  <span class="k">const </span>soundBtn = <span class="f">$</span>(<span class="s">'#soundBtn'</span>);
+
+  <span class="k">const </span>svg = (cls, inner) =&gt;
+    <span class="s">`&lt;svg class="</span><span class="k">${</span>cls<span class="k">}</span><span class="s">" viewBox="0 0 24 24" aria-hidden="true"&gt;</span><span class="k">${</span>inner<span class="k">}</span><span class="s">&lt;/svg&gt;`</span>;
+  <span class="k">const </span>ICON = {
+    check: <span class="f">svg</span>(<span class="s">''</span>, <span class="s">'&lt;polyline points="20 6 9 17 4 12"/&gt;'</span>),
+    edit: <span class="f">svg</span>(<span class="s">'i-edit'</span>,
+      <span class="s">'&lt;path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/&gt;'</span>),
+    save: <span class="f">svg</span>(<span class="s">'i-save'</span>, <span class="s">'&lt;polyline points="20 6 9 17 4 12"/&gt;'</span>),
+    trash: <span class="f">svg</span>(<span class="s">''</span>,
+      <span class="s">'&lt;polyline points="3 6 5 6 21 6"/&gt;' </span>+
+      <span class="s">'&lt;path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/&gt;' </span>+
+      <span class="s">'&lt;path d="M10 11v6M14 11v6"/&gt;' </span>+
+      <span class="s">'&lt;path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/&gt;'</span>),
+  };
+
+  <span class="c">/* ---------- 2. State ---------- */
+  </span><span class="k">let </span>tasks = [];            <span class="c">// [{ id, text, done }]
+  </span><span class="k">let </span>soundOn = <span class="k">true</span>;
+  <span class="k">let </span>nextId = <span class="n">1</span>;
+  <span class="k">const </span>rows = <span class="k">new </span><span class="f">Map</span>();    <span class="c">// id -&gt; row (DOM + animation values)
+  </span><span class="k">const </span>states = <span class="k">new </span><span class="f">Set</span>();  <span class="c">// hover / press trackers
+
+  </span><span class="k">let </span>frame = <span class="n">0</span>;             <span class="c">// frame counter
+  </span><span class="k">let </span>shake = <span class="n">0</span>;             <span class="c">// input shake amount
+  </span><span class="k">let </span>badFrames = <span class="n">0</span>;         <span class="c">// red outline countdown
+  </span><span class="k">let </span>emptyV = <span class="n">1</span>;            <span class="c">// 1 = "No tasks yet" fully shown
+  </span><span class="k">let </span>stickToEnd = <span class="k">false</span>;    <span class="c">// keep the list scrolled to the new task
+
+  </span><span class="k">const </span>motionQuery = window.<span class="f">matchMedia</span>(<span class="s">'(prefers-reduced-motion: reduce)'</span>);
+  <span class="k">let </span>reduceMotion = motionQuery.matches;
+  motionQuery.<span class="f">addEventListener</span>(<span class="s">'change'</span>, (e) =&gt; { reduceMotion = e.matches; });
+
+  <span class="c">/* ---------- 3. Saving (never breaks if storage is blocked) ---------- */
+  </span><span class="k">function </span><span class="f">save</span>() {
+    <span class="k">try </span>{
+      localStorage.<span class="f">setItem</span>(STORE_KEY, JSON.<span class="f">stringify</span>({ tasks, sound: soundOn }));
+    } <span class="k">catch </span>(err) { <span class="c">/* storage unavailable: ignore */ </span>}
+  }
+
+  <span class="k">function </span><span class="f">load</span>() {
+    <span class="k">try </span>{
+      <span class="k">const </span>data = JSON.<span class="f">parse</span>(localStorage.<span class="f">getItem</span>(STORE_KEY));
+      <span class="k">if </span>(data &amp;&amp; Array.<span class="f">isArray</span>(data.tasks)) {
+        tasks = data.tasks
+          .<span class="f">filter</span>((t) =&gt; t &amp;&amp; <span class="k">typeof </span>t.text === <span class="s">'string'</span>)
+          .<span class="f">slice</span>(<span class="n">0</span>, MAX_TASKS)
+          .<span class="f">map</span>((t) =&gt; ({ id: nextId++, text: t.text, done: !!t.done }));
+      }
+      <span class="k">if </span>(data &amp;&amp; data.sound === <span class="k">false</span>) soundOn = <span class="k">false</span>;
+    } <span class="k">catch </span>(err) { <span class="c">/* nothing saved yet */ </span>}
+  }
+
+  <span class="c">/* ---------- 4. Sound (short synthesized tones) ---------- */
+  </span><span class="k">const </span>TONES = {                 <span class="c">// [start Hz, end Hz, seconds]
+    </span>add:    [<span class="n">520</span>, <span class="n">780</span>, <span class="n">.16</span>],
+    done:   [<span class="n">660</span>, <span class="n">990</span>, <span class="n">.14</span>],
+    edit:   [<span class="n">600</span>, <span class="n">700</span>, <span class="n">.10</span>],
+    remove: [<span class="n">440</span>, <span class="n">260</span>, <span class="n">.18</span>],
+    clear:  [<span class="n">520</span>, <span class="n">200</span>, <span class="n">.30</span>],
+    reset:  [<span class="n">780</span>, <span class="n">390</span>, <span class="n">.24</span>],
+    toggle: [<span class="n">600</span>, <span class="n">900</span>, <span class="n">.10</span>],
+  };
+  <span class="k">const </span>soundLog = (window.soundLog = []);   <span class="c">// played tones (for debugging)
+  </span><span class="k">let </span>audio = <span class="k">null</span>;
+
+  <span class="k">function </span><span class="f">playTone</span>(name) {
+    <span class="k">if </span>(!soundOn) <span class="k">return</span>;
+    soundLog.<span class="f">push</span>({ name, frame });
+    <span class="k">try </span>{
+      audio = audio || <span class="k">new </span>(window.AudioContext || window.webkitAudioContext)();
+      <span class="k">const </span>[f0, f1, len] = TONES[name];
+      <span class="k">const </span>t = audio.currentTime;
+      <span class="k">const </span>osc = audio.<span class="f">createOscillator</span>();
+      <span class="k">const </span>gain = audio.<span class="f">createGain</span>();
+      osc.type = <span class="s">'sine'</span>;
+      osc.frequency.<span class="f">setValueAtTime</span>(f0, t);
+      osc.frequency.<span class="f">exponentialRampToValueAtTime</span>(f1, t + len);
+      gain.gain.<span class="f">setValueAtTime</span>(<span class="n">.0001</span>, t);
+      gain.gain.<span class="f">exponentialRampToValueAtTime</span>(<span class="n">.25</span>, t + <span class="n">.01</span>);
+      gain.gain.<span class="f">exponentialRampToValueAtTime</span>(<span class="n">.0001</span>, t + len);
+      osc.<span class="f">connect</span>(gain).<span class="f">connect</span>(audio.destination);
+      osc.<span class="f">start</span>(t);
+      osc.<span class="f">stop</span>(t + len + <span class="n">.02</span>);
+    } <span class="k">catch </span>(err) { <span class="c">/* audio not available: stay silent */ </span>}
+  }
+
+  <span class="c">/* ---------- 5. Hover / press trackers (values eased in tick) ---------- */
+  </span><span class="k">function </span><span class="f">track</span>(el, press = <span class="k">true</span>) {
+    <span class="k">const </span>s = { el, h: <span class="n">0</span>, p: <span class="n">0</span>, th: <span class="n">0</span>, tp: <span class="n">0</span>, hover: <span class="k">false</span>, focus: <span class="k">false </span>};
+    <span class="k">const </span>aim = () =&gt; { s.th = s.hover ? <span class="n">1 </span>: s.focus ? <span class="n">.55 </span>: <span class="n">0</span>; };
+    el.<span class="f">addEventListener</span>(<span class="s">'pointerenter'</span>, () =&gt; { s.hover = <span class="k">true</span>; <span class="f">aim</span>(); });
+    el.<span class="f">addEventListener</span>(<span class="s">'pointerleave'</span>, () =&gt; {
+      s.hover = <span class="k">false</span>; s.tp = <span class="n">0</span>; <span class="f">aim</span>();
+    });
+    el.<span class="f">addEventListener</span>(<span class="s">'focus'</span>, () =&gt; { s.focus = <span class="k">true</span>; <span class="f">aim</span>(); });
+    el.<span class="f">addEventListener</span>(<span class="s">'blur'</span>, () =&gt; { s.focus = <span class="k">false</span>; <span class="f">aim</span>(); });
+    <span class="k">if </span>(press) {
+      el.<span class="f">addEventListener</span>(<span class="s">'pointerdown'</span>, () =&gt; { s.tp = <span class="n">1</span>; });
+      el.<span class="f">addEventListener</span>(<span class="s">'pointerup'</span>, () =&gt; { s.tp = <span class="n">0</span>; });
+      el.<span class="f">addEventListener</span>(<span class="s">'keydown'</span>, (e) =&gt; {
+        <span class="k">if </span>(e.key === <span class="s">' ' </span>|| e.key === <span class="s">'Enter'</span>) s.tp = <span class="n">1</span>;
+      });
+      el.<span class="f">addEventListener</span>(<span class="s">'keyup'</span>, () =&gt; { s.tp = <span class="n">0</span>; });
+    }
+    states.<span class="f">add</span>(s);
+    <span class="k">return </span>s;
+  }
+
+  [soundBtn, resetBtn, clearBtn, form.<span class="f">querySelector</span>(<span class="s">'.add-btn'</span>)]
+    .<span class="f">forEach</span>((el) =&gt; <span class="f">track</span>(el));
+  <span class="k">const </span>fieldState = <span class="f">track</span>(input, <span class="k">false</span>);
+
+  <span class="c">/* ---------- 6. Task rows ---------- */
+  </span><span class="k">function </span><span class="f">createRow</span>(task, delay = <span class="n">0</span>) {
+    <span class="k">const </span>li = document.<span class="f">createElement</span>(<span class="s">'li'</span>);
+    li.className = <span class="s">'item'</span>;
+    li.style.<span class="f">setProperty</span>(<span class="s">'--e'</span>, <span class="s">'0'</span>);
+    li.innerHTML =
+      <span class="s">'&lt;button class="check" type="button" role="checkbox"&gt;' </span>+
+        ICON.check + <span class="s">'&lt;/button&gt;' </span>+
+      <span class="s">'&lt;span class="text"&gt;&lt;/span&gt;' </span>+
+      <span class="s">'&lt;button class="btn round edit" type="button"&gt;' </span>+
+        ICON.edit + ICON.save + <span class="s">'&lt;/button&gt;' </span>+
+      <span class="s">'&lt;button class="btn round del" type="button"&gt;' </span>+ ICON.trash + <span class="s">'&lt;/button&gt;'</span>;
+
+    <span class="k">const </span>row = {
+      task, li, delay,
+      e: <span class="n">0</span>, te: <span class="n">1</span>,                       <span class="c">// enter / exit amount
+      </span>d: task.done ? <span class="n">1 </span>: <span class="n">0</span>, td: task.done ? <span class="n">1 </span>: <span class="n">0</span>,   <span class="c">// done amount
+      </span>leaving: <span class="k">false</span>, editing: <span class="k">false</span>, input: <span class="k">null</span>,
+      textEl: li.<span class="f">querySelector</span>(<span class="s">'.text'</span>),
+      check: li.<span class="f">querySelector</span>(<span class="s">'.check'</span>),
+      editBtn: li.<span class="f">querySelector</span>(<span class="s">'.edit'</span>),
+      delBtn: li.<span class="f">querySelector</span>(<span class="s">'.del'</span>),
+      tracked: [],
+    };
+    li._row = row;
+
+    row.tracked.<span class="f">push</span>(<span class="f">track</span>(li, <span class="k">false</span>), <span class="f">track</span>(row.check, <span class="k">false</span>),
+                     <span class="f">track</span>(row.editBtn), <span class="f">track</span>(row.delBtn));
+    row.check.<span class="f">addEventListener</span>(<span class="s">'click'</span>, () =&gt; <span class="f">toggleDone</span>(row));
+    row.textEl.<span class="f">addEventListener</span>(<span class="s">'click'</span>, () =&gt; <span class="f">toggleDone</span>(row));
+    row.editBtn.<span class="f">addEventListener</span>(<span class="s">'click'</span>, () =&gt; <span class="f">toggleEdit</span>(row));
+    row.delBtn.<span class="f">addEventListener</span>(<span class="s">'click'</span>, (e) =&gt; <span class="f">removeRow</span>(row, e.detail === <span class="n">0</span>));
+
+    <span class="f">paintRow</span>(row);
+    rows.<span class="f">set</span>(task.id, row);
+    list.<span class="f">appendChild</span>(li);
+    <span class="k">return </span>row;
+  }
+
+  <span class="c">// Text and accessible names (textContent keeps user text safe)
+  </span><span class="k">function </span><span class="f">paintRow</span>(row) {
+    <span class="k">const </span>{ text, done } = row.task;
+    row.textEl.textContent = text;
+    row.check.<span class="f">setAttribute</span>(<span class="s">'aria-checked'</span>, <span class="f">String</span>(done));
+    row.check.<span class="f">setAttribute</span>(<span class="s">'aria-label'</span>, <span class="s">`Done: </span><span class="k">${</span>text<span class="k">}</span><span class="s">`</span>);
+    row.editBtn.<span class="f">setAttribute</span>(<span class="s">'aria-label'</span>,
+      row.editing ? <span class="s">'Save task' </span>: <span class="s">`Edit: </span><span class="k">${</span>text<span class="k">}</span><span class="s">`</span>);
+    row.delBtn.<span class="f">setAttribute</span>(<span class="s">'aria-label'</span>, <span class="s">`Delete: </span><span class="k">${</span>text<span class="k">}</span><span class="s">`</span>);
+  }
+
+  <span class="k">function </span><span class="f">addTask</span>(raw) {
+    <span class="k">const </span>text = raw.<span class="f">trim</span>();
+    <span class="k">if </span>(!text || tasks.length &gt;= MAX_TASKS) { <span class="f">nudge</span>(); <span class="k">return</span>; }
+    <span class="k">const </span>task = { id: nextId++, text, done: <span class="k">false </span>};
+    tasks.<span class="f">push</span>(task);
+    <span class="f">createRow</span>(task);
+    stickToEnd = <span class="k">true</span>;
+    input.value = <span class="s">''</span>;
+    <span class="f">save</span>();
+    <span class="f">playTone</span>(<span class="s">'add'</span>);
+  }
+
+  <span class="k">function </span><span class="f">toggleDone</span>(row) {
+    <span class="k">if </span>(row.leaving) <span class="k">return</span>;
+    row.task.done = !row.task.done;
+    row.td = row.task.done ? <span class="n">1 </span>: <span class="n">0</span>;
+    <span class="f">paintRow</span>(row);
+    <span class="f">save</span>();
+    <span class="f">playTone</span>(<span class="s">'done'</span>);
+  }
+
+  <span class="k">function </span><span class="f">removeRow</span>(row, focusNext) {
+    <span class="k">if </span>(row.leaving) <span class="k">return</span>;
+    <span class="k">const </span>alive = <span class="f">aliveItems</span>();
+    <span class="k">const </span>at = alive.<span class="f">indexOf</span>(row.li);
+    row.leaving = <span class="k">true</span>;
+    row.te = <span class="n">0</span>;
+    tasks = tasks.<span class="f">filter</span>((t) =&gt; t !== row.task);
+    <span class="f">save</span>();
+    <span class="f">playTone</span>(<span class="s">'remove'</span>);
+    <span class="k">if </span>(focusNext) {
+      <span class="k">const </span>next = alive[at + <span class="n">1</span>] || alive[at - <span class="n">1</span>];
+      (next ? next._row.delBtn : input).<span class="f">focus</span>();
+    }
+  }
+
+  <span class="k">const </span>aliveItems = () =&gt;
+    [...list.children].<span class="f">filter</span>((li) =&gt; !li._row.leaving);
+
+  <span class="k">function </span><span class="f">clearAll</span>(tone) {
+    <span class="k">const </span>alive = <span class="f">aliveItems</span>();
+    alive.<span class="f">forEach</span>((li, i) =&gt; {
+      li._row.leaving = <span class="k">true</span>;
+      li._row.te = <span class="n">0</span>;
+      li._row.delay = i * <span class="n">5</span>;       <span class="c">// little cascade
+    </span>});
+    tasks = [];
+    <span class="f">save</span>();
+    <span class="f">playTone</span>(tone);
+    <span class="k">if </span>(!alive.length) <span class="f">nudge</span>();
+  }
+
+  <span class="k">function </span><span class="f">resetAll</span>() {
+    <span class="k">if </span>(document.activeElement &amp;&amp; document.activeElement.blur) {
+      <span class="k">if </span>(document.activeElement !== document.body) {
+        document.activeElement.<span class="f">blur</span>();
+      }
+    }
+    input.value = <span class="s">''</span>;
+    <span class="f">clearAll</span>(<span class="s">'reset'</span>);
+    <span class="k">try </span>{ localStorage.<span class="f">removeItem</span>(STORE_KEY); } <span class="k">catch </span>(err) { <span class="c">/* ignore */ </span>}
+    <span class="f">save</span>();
+  }
+
+  <span class="c">/* ---------- 7. Editing a task ---------- */
+  </span><span class="k">function </span><span class="f">toggleEdit</span>(row) {
+    <span class="k">if </span>(row.leaving) <span class="k">return</span>;
+    row.editing ? <span class="f">finishEdit</span>(row, <span class="k">true</span>) : <span class="f">startEdit</span>(row);
+  }
+
+  <span class="k">function </span><span class="f">startEdit</span>(row) {
+    <span class="k">const </span>box = document.<span class="f">createElement</span>(<span class="s">'input'</span>);
+    box.className = <span class="s">'edit-input'</span>;
+    box.maxLength = <span class="n">40</span>;
+    box.value = row.task.text;
+    box.<span class="f">setAttribute</span>(<span class="s">'aria-label'</span>, <span class="s">'Edit task text'</span>);
+    row.input = box;
+    row.editing = <span class="k">true</span>;
+    row.li.classList.<span class="f">add</span>(<span class="s">'editing'</span>);
+    row.textEl.<span class="f">replaceWith</span>(box);
+    <span class="f">paintRow</span>(row);
+    box.<span class="f">focus</span>();
+    box.<span class="f">select</span>();
+
+    box.<span class="f">addEventListener</span>(<span class="s">'keydown'</span>, (e) =&gt; {
+      <span class="k">if </span>(e.key === <span class="s">'Enter'</span>) { e.<span class="f">preventDefault</span>(); <span class="f">finishEdit</span>(row, <span class="k">true</span>); }
+      <span class="k">if </span>(e.key === <span class="s">'Escape'</span>) { e.<span class="f">preventDefault</span>(); <span class="f">finishEdit</span>(row, <span class="k">false</span>); }
+    });
+    box.<span class="f">addEventListener</span>(<span class="s">'blur'</span>, (e) =&gt; {
+      <span class="k">if </span>(e.relatedTarget !== row.editBtn) <span class="f">finishEdit</span>(row, <span class="k">true</span>);
+    });
+  }
+
+  <span class="k">function </span><span class="f">finishEdit</span>(row, keep) {
+    <span class="k">if </span>(!row.editing) <span class="k">return</span>;
+    <span class="k">const </span>text = row.input.value.<span class="f">trim</span>();
+    row.editing = <span class="k">false</span>;
+    row.li.classList.<span class="f">remove</span>(<span class="s">'editing'</span>);
+    <span class="k">if </span>(keep &amp;&amp; text &amp;&amp; text !== row.task.text) {
+      row.task.text = text;
+      <span class="f">save</span>();
+      <span class="f">playTone</span>(<span class="s">'edit'</span>);
+    }
+    row.input.<span class="f">replaceWith</span>(row.textEl);
+    row.input = <span class="k">null</span>;
+    <span class="f">paintRow</span>(row);
+  }
+
+  <span class="c">/* ---------- 8. Small helpers ---------- */
+  </span><span class="k">function </span><span class="f">nudge</span>() {                 <span class="c">// empty input / nothing to clear
+    </span>badFrames = <span class="n">40</span>;
+    shake = reduceMotion ? <span class="n">0 </span>: <span class="n">1</span>;
+  }
+
+  <span class="k">function </span><span class="f">toggleSound</span>() {
+    soundOn = !soundOn;
+    soundBtn.<span class="f">setAttribute</span>(<span class="s">'aria-pressed'</span>, <span class="f">String</span>(soundOn));
+    soundBtn.<span class="f">setAttribute</span>(<span class="s">'aria-label'</span>, soundOn ? <span class="s">'Sound on' </span>: <span class="s">'Sound off'</span>);
+    soundBtn.classList.<span class="f">toggle</span>(<span class="s">'muted'</span>, !soundOn);
+    <span class="f">save</span>();
+    <span class="f">playTone</span>(<span class="s">'toggle'</span>);
+  }
+
+  <span class="c">/* ---------- 9. Events ---------- */
+  </span>form.<span class="f">addEventListener</span>(<span class="s">'submit'</span>, (e) =&gt; {
+    e.<span class="f">preventDefault</span>();
+    <span class="f">addTask</span>(input.value);
+    input.<span class="f">focus</span>();
+  });
+  clearBtn.<span class="f">addEventListener</span>(<span class="s">'click'</span>, () =&gt; <span class="f">clearAll</span>(<span class="s">'clear'</span>));
+  resetBtn.<span class="f">addEventListener</span>(<span class="s">'click'</span>, resetAll);
+  soundBtn.<span class="f">addEventListener</span>(<span class="s">'click'</span>, toggleSound);
+
+  <span class="c">// Arrow keys move between buttons, Delete removes the focused task
+  </span>list.<span class="f">addEventListener</span>(<span class="s">'keydown'</span>, (e) =&gt; {
+    <span class="k">const </span>btn = e.target.<span class="f">closest</span>(<span class="s">'button'</span>);
+    <span class="k">if </span>(!btn) <span class="k">return</span>;
+    <span class="k">const </span>li = btn.<span class="f">closest</span>(<span class="s">'.item'</span>);
+    <span class="k">const </span>btns = [...li.<span class="f">querySelectorAll</span>(<span class="s">'button'</span>)];
+    <span class="k">const </span>at = btns.<span class="f">indexOf</span>(btn);
+    <span class="k">const </span>alive = <span class="f">aliveItems</span>();
+    <span class="k">const </span>pos = alive.<span class="f">indexOf</span>(li);
+    <span class="k">let </span>target = <span class="k">null</span>;
+
+    <span class="k">if </span>(e.key === <span class="s">'ArrowRight'</span>) target = btns[at + <span class="n">1</span>] || btns[<span class="n">0</span>];
+    <span class="k">if </span>(e.key === <span class="s">'ArrowLeft'</span>) target = btns[at - <span class="n">1</span>] || btns[btns.length - <span class="n">1</span>];
+    <span class="k">if </span>(e.key === <span class="s">'ArrowDown' </span>&amp;&amp; alive[pos + <span class="n">1</span>]) {
+      target = alive[pos + <span class="n">1</span>].<span class="f">querySelectorAll</span>(<span class="s">'button'</span>)[at];
+    }
+    <span class="k">if </span>(e.key === <span class="s">'ArrowUp' </span>&amp;&amp; alive[pos - <span class="n">1</span>]) {
+      target = alive[pos - <span class="n">1</span>].<span class="f">querySelectorAll</span>(<span class="s">'button'</span>)[at];
+    }
+    <span class="k">if </span>(e.key === <span class="s">'Delete'</span>) { e.<span class="f">preventDefault</span>(); <span class="f">removeRow</span>(li._row, <span class="k">true</span>); }
+    <span class="k">if </span>(target) { e.<span class="f">preventDefault</span>(); target.<span class="f">focus</span>(); }
+  });
+
+  <span class="c">// Global shortcuts (ignored while typing)
+  </span>document.<span class="f">addEventListener</span>(<span class="s">'keydown'</span>, (e) =&gt; {
+    <span class="k">if </span>(e.ctrlKey || e.metaKey || e.altKey) <span class="k">return</span>;
+    <span class="k">if </span>(e.target.<span class="f">matches</span>(<span class="s">'input, textarea'</span>)) {
+      <span class="k">if </span>(e.key === <span class="s">'Escape' </span>&amp;&amp; e.target === input) {
+        input.value = <span class="s">''</span>;
+        input.<span class="f">blur</span>();
+      }
+      <span class="k">return</span>;
+    }
+    <span class="k">const </span>key = e.key.<span class="f">toLowerCase</span>();
+    <span class="k">if </span>(key === <span class="s">'/'</span>) { e.<span class="f">preventDefault</span>(); input.<span class="f">focus</span>(); }
+    <span class="k">if </span>(key === <span class="s">'r'</span>) <span class="f">resetAll</span>();
+    <span class="k">if </span>(key === <span class="s">'m'</span>) <span class="f">toggleSound</span>();
+  });
+
+  <span class="c">/* ---------- 10. The one animation loop ---------- */
+  </span><span class="k">const </span>approach = (value, target, k) =&gt; {
+    <span class="k">const </span>next = value + (target - value) * k;
+    <span class="k">return </span>Math.<span class="f">abs</span>(target - next) &lt; <span class="n">.002 </span>? target : next;
+  };
+
+  <span class="k">function </span><span class="f">tick</span>() {
+    frame++;
+    <span class="k">const </span>k = reduceMotion ? <span class="n">1 </span>: <span class="n">.2</span>;          <span class="c">// easing per frame
+
+    // hover + press on buttons, rows and the input
+    </span><span class="k">for </span>(<span class="k">const </span>s <span class="k">of </span>states) {
+      s.h = <span class="f">approach</span>(s.h, s.th, k);
+      s.p = <span class="f">approach</span>(s.p, s.tp, Math.<span class="f">min</span>(<span class="n">1</span>, k * <span class="n">1.6</span>));
+      <span class="k">if </span>(s.h !== s.ph) { s.el.style.<span class="f">setProperty</span>(<span class="s">'--h'</span>, s.h.<span class="f">toFixed</span>(<span class="n">3</span>)); }
+      <span class="k">if </span>(s.p !== s.pp &amp;&amp; s !== fieldState) {
+        s.el.style.<span class="f">setProperty</span>(<span class="s">'--p'</span>, s.p.<span class="f">toFixed</span>(<span class="n">3</span>));
+      }
+      s.ph = s.h;
+      s.pp = s.p;
+    }
+
+    <span class="c">// rows: enter, leave, done
+    </span><span class="k">let </span>entering = <span class="k">false</span>;
+    <span class="k">for </span>(<span class="k">const </span>row <span class="k">of </span>rows.<span class="f">values</span>()) {
+      <span class="k">if </span>(row.delay &gt; <span class="n">0</span>) { row.delay--; entering = <span class="k">true</span>; <span class="k">continue</span>; }
+      <span class="k">const </span>e = <span class="f">approach</span>(row.e, row.te, k * <span class="n">.8</span>);
+      <span class="k">const </span>d = <span class="f">approach</span>(row.d, row.td, k * <span class="n">.9</span>);
+      <span class="k">if </span>(e !== row.e) row.li.style.<span class="f">setProperty</span>(<span class="s">'--e'</span>, e.<span class="f">toFixed</span>(<span class="n">3</span>));
+      <span class="k">if </span>(d !== row.d) row.li.style.<span class="f">setProperty</span>(<span class="s">'--d'</span>, d.<span class="f">toFixed</span>(<span class="n">3</span>));
+      row.e = e;
+      row.d = d;
+      <span class="k">if </span>(row.te === <span class="n">1 </span>&amp;&amp; e &lt; <span class="n">1</span>) entering = <span class="k">true</span>;
+
+      <span class="k">if </span>(row.te === <span class="n">0 </span>&amp;&amp; e === <span class="n">0</span>) {          <span class="c">// finished leaving
+        </span>row.tracked.<span class="f">forEach</span>((s) =&gt; states.<span class="k">delete</span>(s));
+        row.li.<span class="f">remove</span>();
+        rows.<span class="k">delete</span>(row.task.id);
+      }
+    }
+    <span class="k">if </span>(stickToEnd) {
+      list.scrollTop = list.scrollHeight;
+      <span class="k">if </span>(!entering) stickToEnd = <span class="k">false</span>;
+    }
+
+    <span class="c">// "No tasks yet" fades in when nothing is left
+    </span><span class="k">const </span>nothing = tasks.length === <span class="n">0</span>;
+    <span class="k">const </span>v = <span class="f">approach</span>(emptyV, nothing ? <span class="n">1 </span>: <span class="n">0</span>, k);
+    <span class="k">if </span>(v !== emptyV) empty.style.<span class="f">setProperty</span>(<span class="s">'--v'</span>, v.<span class="f">toFixed</span>(<span class="n">3</span>));
+    emptyV = v;
+
+    <span class="c">// shake + red outline when the input is empty
+    </span><span class="k">if </span>(shake &gt; <span class="n">.01</span>) {
+      shake *= <span class="n">.88</span>;
+      <span class="k">const </span>dx = Math.<span class="f">sin</span>(frame * <span class="n">1.1</span>) * shake * <span class="n">10</span>;
+      input.style.transform = <span class="s">`translateX(</span><span class="k">${</span>dx<span class="k">}</span><span class="s">px)`</span>;
+    } <span class="k">else if </span>(input.style.transform) {
+      shake = <span class="n">0</span>;
+      input.style.transform = <span class="s">''</span>;
+    }
+    <span class="k">if </span>(badFrames &gt; <span class="n">0</span>) badFrames--;
+    input.classList.<span class="f">toggle</span>(<span class="s">'bad'</span>, badFrames &gt; <span class="n">0</span>);
+
+    <span class="f">requestAnimationFrame</span>(tick);
+  }
+
+  <span class="c">/* ---------- 11. Start ---------- */
+  </span><span class="f">load</span>();
+  soundBtn.<span class="f">setAttribute</span>(<span class="s">'aria-pressed'</span>, <span class="f">String</span>(soundOn));
+  soundBtn.<span class="f">setAttribute</span>(<span class="s">'aria-label'</span>, soundOn ? <span class="s">'Sound on' </span>: <span class="s">'Sound off'</span>);
+  soundBtn.classList.<span class="f">toggle</span>(<span class="s">'muted'</span>, !soundOn);
+  tasks.<span class="f">forEach</span>((t, i) =&gt; <span class="f">createRow</span>(t, i * <span class="n">6</span>));
+  emptyV = tasks.length ? <span class="n">0 </span>: <span class="n">1</span>;
+  empty.style.<span class="f">setProperty</span>(<span class="s">'--v'</span>, <span class="f">String</span>(emptyV));
+  <span class="f">requestAnimationFrame</span>(tick);
+})();</code></pre>
+    </div>
+  </section>
+
+</div>
+
+<script type="application/json" id="files">{"html": "\u003c!DOCTYPE html>\n\u003chtml lang=\"en\">\n\u003chead>\n  \u003cmeta charset=\"UTF-8\">\n  \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  \u003ctitle>To Do app | @stackanddstyle\u003c/title>\n  \u003clink rel=\"stylesheet\" href=\"style.css\">\n\u003c/head>\n\u003cbody>\n\n  \u003cmain class=\"stage\">\n\n    \u003c!-- The To Do card -->\n    \u003csection class=\"card\" aria-labelledby=\"title\">\n\n      \u003cheader class=\"card-head\">\n        \u003c!-- Sound on / off (M) -->\n        \u003cbutton class=\"btn round tool\" id=\"soundBtn\" type=\"button\"\n                aria-pressed=\"true\" aria-label=\"Sound\" title=\"Sound (M)\">\n          \u003csvg class=\"i-on\" viewBox=\"0 0 24 24\" aria-hidden=\"true\">\n            \u003cpolygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"/>\n            \u003cpath d=\"M15.5 8.5a5 5 0 0 1 0 7\"/>\n            \u003cpath d=\"M19 5a10 10 0 0 1 0 14\"/>\n          \u003c/svg>\n          \u003csvg class=\"i-off\" viewBox=\"0 0 24 24\" aria-hidden=\"true\">\n            \u003cpolygon points=\"11 5 6 9 2 9 2 15 6 15 11 19 11 5\"/>\n            \u003cline x1=\"23\" y1=\"9\" x2=\"17\" y2=\"15\"/>\n            \u003cline x1=\"17\" y1=\"9\" x2=\"23\" y2=\"15\"/>\n          \u003c/svg>\n        \u003c/button>\n\n        \u003ch1 id=\"title\">ToDo List\u003c/h1>\n\n        \u003c!-- Reset everything (R) -->\n        \u003cbutton class=\"btn round tool\" id=\"resetBtn\" type=\"button\"\n                aria-label=\"Reset\" title=\"Reset (R)\">\n          \u003csvg viewBox=\"0 0 24 24\" aria-hidden=\"true\">\n            \u003cpolyline points=\"1 4 1 10 7 10\"/>\n            \u003cpath d=\"M3.5 15a9 9 0 1 0 2.1-9.4L1 10\"/>\n          \u003c/svg>\n        \u003c/button>\n      \u003c/header>\n\n      \u003c!-- Add a task -->\n      \u003cform class=\"add\" id=\"addForm\" autocomplete=\"off\">\n        \u003clabel class=\"sr\" for=\"taskInput\">New task\u003c/label>\n        \u003cinput class=\"field\" id=\"taskInput\" type=\"text\" maxlength=\"40\"\n               placeholder=\"Enter a task...\">\n        \u003cbutton class=\"btn round add-btn\" type=\"submit\" aria-label=\"Add task\">\n          \u003csvg viewBox=\"0 0 24 24\" aria-hidden=\"true\">\n            \u003cpath d=\"M12 5v14M5 12h14\"/>\n          \u003c/svg>\n        \u003c/button>\n      \u003c/form>\n\n      \u003c!-- Tasks are created by script.js -->\n      \u003cul class=\"list\" id=\"list\" aria-label=\"Tasks\">\u003c/ul>\n\n      \u003cp class=\"empty\" id=\"empty\">No tasks yet\u003c/p>\n\n      \u003cbutton class=\"btn clear\" id=\"clearBtn\" type=\"button\">\n        \u003csvg viewBox=\"0 0 24 24\" aria-hidden=\"true\">\n          \u003cpolyline points=\"3 6 5 6 21 6\"/>\n          \u003cpath d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/>\n          \u003cpath d=\"M10 11v6M14 11v6\"/>\n          \u003cpath d=\"M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2\"/>\n        \u003c/svg>\n        Clear All\n      \u003c/button>\n    \u003c/section>\n\n    \u003cp class=\"hint\">\n      \u003ckbd>Enter\u003c/kbd> add &nbsp;\u00b7&nbsp; \u003ckbd>/\u003c/kbd> focus &nbsp;\u00b7&nbsp;\n      \u003ckbd>R\u003c/kbd> reset &nbsp;\u00b7&nbsp; \u003ckbd>M\u003c/kbd> sound\n    \u003c/p>\n  \u003c/main>\n\n  \u003cp class=\"credit\">Created by \u003cb>@stackanddstyle\u003c/b>\u003c/p>\n\n  \u003cscript src=\"script.js\">\u003c/script>\n\u003c/body>\n\u003c/html>\n", "css": "/* =====================================================\n   To Do app  |  Created by @stackanddstyle\n   Motion (hover, press, add, remove, tick) is driven by script.js, which\n   sets the custom properties --h, --p, --e, --d and --v every frame.\n   There are no CSS transitions or keyframes on purpose.\n   ===================================================== */\n\n/* ============ CHANGE COLORS HERE ============ */\n:root {\n  --bg-a: #f6f8fc;            /* page gradient start */\n  --bg-b: #e8ecf5;            /* page gradient end */\n  --surface: #f1f4fa;         /* card, rows and buttons */\n  --ink: #0f172a;             /* main text */\n  --hint: #7a86a1;            /* soft text */\n  --accent: #4f6bd6;          /* plus, edit, focus glow */\n  --accent-rgb: 79 107 214;\n  --danger: #e5484d;          /* delete, clear all */\n  --danger-rgb: 229 72 77;\n  --ok-rgb: 34 176 125;       /* finished task */\n  --focus: #2563eb;           /* keyboard focus ring */\n  --sh-dark: 163 177 198;     /* neumorphic shadow, dark side */\n  --sh-light: 255 255 255;    /* neumorphic shadow, light side */\n  --credit-bg: #0f1f44;\n  --credit-ink: #ffffff;\n}\n\n/* ---------- Base ---------- */\n*, *::before, *::after { box-sizing: border-box; }\n\nhtml {\n  /* 1rem = 16px when the demo is about 1024px wide */\n  font-size: clamp(11px, 1.5625vw, 18px);\n}\n\nbody {\n  margin: 0;\n  min-height: 100vh;\n  color: var(--ink);\n  font-family: \"Segoe UI\", Inter, system-ui, -apple-system, Roboto,\n               Arial, sans-serif;\n  background:\n    radial-gradient(60rem 40rem at 50% -10%, #ffffff 0%, transparent 70%),\n    linear-gradient(160deg, var(--bg-a), var(--bg-b));\n  background-attachment: fixed;\n}\n\n.sr {\n  position: absolute; width: 1px; height: 1px; overflow: hidden;\n  clip: rect(0 0 0 0); white-space: nowrap;\n}\n\n/* Content starts at the top, with room below for the credit pill */\n.stage {\n  min-height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: flex-start;\n  padding: 1.4rem 1rem 6rem;\n}\n\n/* ---------- Card ---------- */\n.card {\n  width: min(100%, 54rem);\n  padding: 1.6rem 1.8rem 1.7rem;\n  border-radius: 2.2rem;\n  background: var(--surface);\n  box-shadow:\n    1.3rem 1.3rem 2.8rem rgb(var(--sh-dark) / .55),\n    -1rem -1rem 2.2rem rgb(var(--sh-light) / .95);\n}\n\n.card-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  margin-bottom: 1.3rem;\n}\n\nh1 {\n  margin: 0;\n  font-size: 2.5rem;\n  font-weight: 800;\n  letter-spacing: -.01em;\n}\n\n/* ---------- Raised neumorphic look (buttons + rows) ----------\n   --h = hover amount (0 to 1), --p = pressed amount (0 to 1).\n   Pressed turns the outer shadow into an inner one. */\n.btn, .item {\n  --h: 0;\n  --p: 0;\n  --o: 5px;\n  box-shadow:\n    calc(var(--o) + var(--h) * 2px) calc(var(--o) + var(--h) * 2px)\n      calc(var(--o) * 2 + var(--h) * 4px)\n      rgb(var(--sh-dark) / calc(.55 * (1 - var(--p)))),\n    calc(var(--o) * -1 - var(--h) * 2px)\n      calc(var(--o) * -1 - var(--h) * 2px)\n      calc(var(--o) * 2 + var(--h) * 4px)\n      rgb(var(--sh-light) / calc(1 - var(--p))),\n    inset calc(var(--o) * .6) calc(var(--o) * .6) calc(var(--o) * 1.2)\n      rgb(var(--sh-dark) / calc(.6 * var(--p))),\n    inset calc(var(--o) * -.6) calc(var(--o) * -.6) calc(var(--o) * 1.2)\n      rgb(var(--sh-light) / calc(.9 * var(--p)));\n}\n\n.btn {\n  border: 0;\n  padding: 0;\n  cursor: pointer;\n  font: inherit;\n  background: var(--surface);\n  color: var(--accent);\n  display: inline-grid;\n  place-items: center;\n  transform: translateY(calc(var(--h) * -2px))\n             scale(calc(1 + var(--h) * .06 - var(--p) * .08));\n}\n\n.btn svg, .check svg {\n  width: 48%;\n  height: 48%;\n  fill: none;\n  stroke: currentColor;\n  stroke-width: 2.2;\n  stroke-linecap: round;\n  stroke-linejoin: round;\n  pointer-events: none;\n}\n\n.round {\n  width: var(--size, 4rem);\n  height: var(--size, 4rem);\n  border-radius: 50%;\n}\n\n.tool    { --size: 3.6rem; --o: 4px; color: var(--hint); }\n.add-btn { --size: 4.6rem; }\n.edit, .del { --size: 3.9rem; --o: 4px; }\n.edit { color: var(--accent); }\n.del  { color: var(--danger); }\n\n/* Sound button: show the right icon */\n.tool .i-off { display: none; }\n.muted .i-on { display: none; }\n.muted .i-off { display: block; }\n\n/* ---------- Add field (sunken) ---------- */\n.add {\n  display: flex;\n  align-items: center;\n  gap: 1.1rem;\n  margin-bottom: 1.2rem;\n}\n\n.field {\n  --h: 0;\n  flex: 1;\n  min-width: 0;\n  height: 4.6rem;\n  padding: 0 1.4rem;\n  border: 0;\n  border-radius: 1.5rem;\n  background: var(--surface);\n  color: var(--ink);\n  font-size: 1.8rem;\n  font-weight: 500;\n  font-family: inherit;\n  outline: none;\n  box-shadow:\n    inset .4rem .4rem .9rem rgb(var(--sh-dark) / .6),\n    inset -.4rem -.4rem .9rem rgb(var(--sh-light) / .95),\n    0 0 0 calc(var(--h) * .28rem) rgb(var(--accent-rgb) / calc(var(--h) * .45));\n}\n.field::placeholder { color: var(--hint); opacity: .9; }\n.field.bad { outline: .22rem solid rgb(var(--danger-rgb) / .7); }\n\n/* ---------- Task list ---------- */\n.list {\n  list-style: none;\n  margin: 0 -1rem;\n  padding: .9rem 1rem .2rem;\n  max-height: 27rem;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  scrollbar-width: thin;\n  scrollbar-color: rgb(var(--sh-dark) / .8) transparent;\n}\n\n/* --e = enter/exit amount (0 to 1), --d = done amount (0 to 1) */\n.item {\n  --e: 1;\n  --d: 0;\n  --row: 5.4rem;\n  --gap: 1rem;\n  --o: 4px;\n  display: flex;\n  align-items: center;\n  gap: 1rem;\n  height: var(--row);\n  padding: 0 .75rem 0 1rem;\n  border-radius: 1.6rem;\n  background: var(--surface);\n  opacity: var(--e);\n  /* a leaving row also pulls the rows below it up */\n  margin-bottom: calc((var(--e) - 1) * var(--row) + var(--e) * var(--gap));\n  transform: translateY(calc((1 - var(--e)) * 1.2rem - var(--h) * 2px))\n             scale(calc(.94 + .06 * var(--e) + var(--h) * .01));\n}\n\n.text {\n  position: relative;\n  margin-right: auto;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n  font-size: 1.85rem;\n  font-weight: 500;\n  cursor: pointer;\n  color: color-mix(in srgb, var(--hint) calc(var(--d) * 100%), var(--ink));\n}\n/* strike-through line grows with --d */\n.text::after {\n  content: \"\";\n  position: absolute;\n  left: 0;\n  top: 55%;\n  height: .2rem;\n  width: calc(var(--d) * 100%);\n  border-radius: 1rem;\n  background: currentColor;\n}\n\n.edit-input {\n  flex: 1;\n  min-width: 0;\n  height: 3.6rem;\n  padding: 0 .4rem;\n  border: 0;\n  border-bottom: .2rem solid var(--accent);\n  background: transparent;\n  color: var(--ink);\n  font-size: 1.85rem;\n  font-weight: 500;\n  font-family: inherit;\n  outline: none;\n}\n\n/* Round tick box on the left of every task */\n.check {\n  --h: 0;\n  flex: none;\n  width: 3.2rem;\n  height: 3.2rem;\n  padding: 0;\n  border: 0;\n  border-radius: 50%;\n  cursor: pointer;\n  display: grid;\n  place-items: center;\n  color: #fff;\n  background: rgb(var(--ok-rgb) / var(--d));\n  transform: scale(calc(1 + var(--h) * .1));\n  box-shadow:\n    inset .3rem .3rem .6rem rgb(var(--sh-dark) / calc(.8 - var(--d) * .4)),\n    inset -.3rem -.3rem .6rem rgb(var(--sh-light) / calc(1 - var(--d) * .6));\n}\n.check svg {\n  width: 62%;\n  height: 62%;\n  stroke-width: 3;\n  opacity: var(--d);\n  transform: scale(calc(.4 + var(--d) * .6));\n}\n\n/* Edit button swaps its pencil for a tick while editing */\n.edit .i-save { display: none; }\n.editing .edit .i-edit { display: none; }\n.editing .edit .i-save { display: block; }\n\n/* ---------- Empty state + Clear All ---------- */\n.empty {\n  --v: 1;\n  margin: 0;\n  height: calc(var(--v) * 5rem);\n  opacity: var(--v);\n  overflow: hidden;\n  display: grid;\n  place-items: center;\n  color: var(--hint);\n  font-size: 1.75rem;\n}\n\n.clear {\n  --o: 4px;\n  display: flex;\n  align-items: center;\n  gap: .7rem;\n  height: 4.2rem;\n  margin: .7rem auto 0;\n  padding: 0 2rem;\n  border-radius: 1.4rem;\n  color: var(--danger);\n  font-size: 1.75rem;\n  font-weight: 600;\n}\n.clear svg { width: 1.9rem; height: 1.9rem; }\n\n/* ---------- Hint + credit ---------- */\n.hint {\n  margin: 1.2rem 0 0;\n  color: var(--hint);\n  font-size: 1.7rem;\n  text-align: center;\n}\nkbd { font: inherit; font-weight: 700; color: var(--ink); }\n\n.credit {\n  position: fixed;\n  right: 1rem;\n  bottom: 1rem;\n  margin: 0;\n  padding: .55rem 1.3rem;\n  border-radius: 999px;\n  background: var(--credit-bg);\n  color: var(--credit-ink);\n  font-size: 1.5rem;\n  box-shadow: 0 .4rem 1.2rem rgb(15 31 68 / .3);\n}\n.credit b { font-weight: 700; }\n\n/* ---------- Keyboard focus ---------- */\n:focus-visible {\n  outline: .22rem solid var(--focus);\n  outline-offset: .25rem;\n}\n.field:focus-visible, .edit-input:focus-visible { outline-offset: .1rem; }\n.edit-input:focus-visible { outline: none; }\n\n/* ---------- Small screens ---------- */\n@media (max-width: 480px) {\n  .stage { padding-top: 1rem; }\n  .card { padding: 1.2rem 1.1rem 1.3rem; }\n  h1 { font-size: 2.1rem; }\n}\n", "js": "/* =====================================================\n   To Do app  |  Created by @stackanddstyle\n   Plain JavaScript. ONE requestAnimationFrame loop eases every value\n   (hover, press, add, remove, done) toward its target once per frame.\n   Keys:  Enter add | / focus | R reset | M sound | arrows move | Del remove\n   ===================================================== */\n(() => {\n  'use strict';\n\n  /* ---------- 1. Settings and elements ---------- */\n  const STORE_KEY = 'stackanddstyle-todo-v1';\n  const MAX_TASKS = 30;\n\n  const $ = (sel) => document.querySelector(sel);\n  const list = $('#list');\n  const empty = $('#empty');\n  const input = $('#taskInput');\n  const form = $('#addForm');\n  const clearBtn = $('#clearBtn');\n  const resetBtn = $('#resetBtn');\n  const soundBtn = $('#soundBtn');\n\n  const svg = (cls, inner) =>\n    `\u003csvg class=\"${cls}\" viewBox=\"0 0 24 24\" aria-hidden=\"true\">${inner}\u003c/svg>`;\n  const ICON = {\n    check: svg('', '\u003cpolyline points=\"20 6 9 17 4 12\"/>'),\n    edit: svg('i-edit',\n      '\u003cpath d=\"M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z\"/>'),\n    save: svg('i-save', '\u003cpolyline points=\"20 6 9 17 4 12\"/>'),\n    trash: svg('',\n      '\u003cpolyline points=\"3 6 5 6 21 6\"/>' +\n      '\u003cpath d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/>' +\n      '\u003cpath d=\"M10 11v6M14 11v6\"/>' +\n      '\u003cpath d=\"M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2\"/>'),\n  };\n\n  /* ---------- 2. State ---------- */\n  let tasks = [];            // [{ id, text, done }]\n  let soundOn = true;\n  let nextId = 1;\n  const rows = new Map();    // id -> row (DOM + animation values)\n  const states = new Set();  // hover / press trackers\n\n  let frame = 0;             // frame counter\n  let shake = 0;             // input shake amount\n  let badFrames = 0;         // red outline countdown\n  let emptyV = 1;            // 1 = \"No tasks yet\" fully shown\n  let stickToEnd = false;    // keep the list scrolled to the new task\n\n  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');\n  let reduceMotion = motionQuery.matches;\n  motionQuery.addEventListener('change', (e) => { reduceMotion = e.matches; });\n\n  /* ---------- 3. Saving (never breaks if storage is blocked) ---------- */\n  function save() {\n    try {\n      localStorage.setItem(STORE_KEY, JSON.stringify({ tasks, sound: soundOn }));\n    } catch (err) { /* storage unavailable: ignore */ }\n  }\n\n  function load() {\n    try {\n      const data = JSON.parse(localStorage.getItem(STORE_KEY));\n      if (data && Array.isArray(data.tasks)) {\n        tasks = data.tasks\n          .filter((t) => t && typeof t.text === 'string')\n          .slice(0, MAX_TASKS)\n          .map((t) => ({ id: nextId++, text: t.text, done: !!t.done }));\n      }\n      if (data && data.sound === false) soundOn = false;\n    } catch (err) { /* nothing saved yet */ }\n  }\n\n  /* ---------- 4. Sound (short synthesized tones) ---------- */\n  const TONES = {                 // [start Hz, end Hz, seconds]\n    add:    [520, 780, .16],\n    done:   [660, 990, .14],\n    edit:   [600, 700, .10],\n    remove: [440, 260, .18],\n    clear:  [520, 200, .30],\n    reset:  [780, 390, .24],\n    toggle: [600, 900, .10],\n  };\n  const soundLog = (window.soundLog = []);   // played tones (for debugging)\n  let audio = null;\n\n  function playTone(name) {\n    if (!soundOn) return;\n    soundLog.push({ name, frame });\n    try {\n      audio = audio || new (window.AudioContext || window.webkitAudioContext)();\n      const [f0, f1, len] = TONES[name];\n      const t = audio.currentTime;\n      const osc = audio.createOscillator();\n      const gain = audio.createGain();\n      osc.type = 'sine';\n      osc.frequency.setValueAtTime(f0, t);\n      osc.frequency.exponentialRampToValueAtTime(f1, t + len);\n      gain.gain.setValueAtTime(.0001, t);\n      gain.gain.exponentialRampToValueAtTime(.25, t + .01);\n      gain.gain.exponentialRampToValueAtTime(.0001, t + len);\n      osc.connect(gain).connect(audio.destination);\n      osc.start(t);\n      osc.stop(t + len + .02);\n    } catch (err) { /* audio not available: stay silent */ }\n  }\n\n  /* ---------- 5. Hover / press trackers (values eased in tick) ---------- */\n  function track(el, press = true) {\n    const s = { el, h: 0, p: 0, th: 0, tp: 0, hover: false, focus: false };\n    const aim = () => { s.th = s.hover ? 1 : s.focus ? .55 : 0; };\n    el.addEventListener('pointerenter', () => { s.hover = true; aim(); });\n    el.addEventListener('pointerleave', () => {\n      s.hover = false; s.tp = 0; aim();\n    });\n    el.addEventListener('focus', () => { s.focus = true; aim(); });\n    el.addEventListener('blur', () => { s.focus = false; aim(); });\n    if (press) {\n      el.addEventListener('pointerdown', () => { s.tp = 1; });\n      el.addEventListener('pointerup', () => { s.tp = 0; });\n      el.addEventListener('keydown', (e) => {\n        if (e.key === ' ' || e.key === 'Enter') s.tp = 1;\n      });\n      el.addEventListener('keyup', () => { s.tp = 0; });\n    }\n    states.add(s);\n    return s;\n  }\n\n  [soundBtn, resetBtn, clearBtn, form.querySelector('.add-btn')]\n    .forEach((el) => track(el));\n  const fieldState = track(input, false);\n\n  /* ---------- 6. Task rows ---------- */\n  function createRow(task, delay = 0) {\n    const li = document.createElement('li');\n    li.className = 'item';\n    li.style.setProperty('--e', '0');\n    li.innerHTML =\n      '\u003cbutton class=\"check\" type=\"button\" role=\"checkbox\">' +\n        ICON.check + '\u003c/button>' +\n      '\u003cspan class=\"text\">\u003c/span>' +\n      '\u003cbutton class=\"btn round edit\" type=\"button\">' +\n        ICON.edit + ICON.save + '\u003c/button>' +\n      '\u003cbutton class=\"btn round del\" type=\"button\">' + ICON.trash + '\u003c/button>';\n\n    const row = {\n      task, li, delay,\n      e: 0, te: 1,                       // enter / exit amount\n      d: task.done ? 1 : 0, td: task.done ? 1 : 0,   // done amount\n      leaving: false, editing: false, input: null,\n      textEl: li.querySelector('.text'),\n      check: li.querySelector('.check'),\n      editBtn: li.querySelector('.edit'),\n      delBtn: li.querySelector('.del'),\n      tracked: [],\n    };\n    li._row = row;\n\n    row.tracked.push(track(li, false), track(row.check, false),\n                     track(row.editBtn), track(row.delBtn));\n    row.check.addEventListener('click', () => toggleDone(row));\n    row.textEl.addEventListener('click', () => toggleDone(row));\n    row.editBtn.addEventListener('click', () => toggleEdit(row));\n    row.delBtn.addEventListener('click', (e) => removeRow(row, e.detail === 0));\n\n    paintRow(row);\n    rows.set(task.id, row);\n    list.appendChild(li);\n    return row;\n  }\n\n  // Text and accessible names (textContent keeps user text safe)\n  function paintRow(row) {\n    const { text, done } = row.task;\n    row.textEl.textContent = text;\n    row.check.setAttribute('aria-checked', String(done));\n    row.check.setAttribute('aria-label', `Done: ${text}`);\n    row.editBtn.setAttribute('aria-label',\n      row.editing ? 'Save task' : `Edit: ${text}`);\n    row.delBtn.setAttribute('aria-label', `Delete: ${text}`);\n  }\n\n  function addTask(raw) {\n    const text = raw.trim();\n    if (!text || tasks.length >= MAX_TASKS) { nudge(); return; }\n    const task = { id: nextId++, text, done: false };\n    tasks.push(task);\n    createRow(task);\n    stickToEnd = true;\n    input.value = '';\n    save();\n    playTone('add');\n  }\n\n  function toggleDone(row) {\n    if (row.leaving) return;\n    row.task.done = !row.task.done;\n    row.td = row.task.done ? 1 : 0;\n    paintRow(row);\n    save();\n    playTone('done');\n  }\n\n  function removeRow(row, focusNext) {\n    if (row.leaving) return;\n    const alive = aliveItems();\n    const at = alive.indexOf(row.li);\n    row.leaving = true;\n    row.te = 0;\n    tasks = tasks.filter((t) => t !== row.task);\n    save();\n    playTone('remove');\n    if (focusNext) {\n      const next = alive[at + 1] || alive[at - 1];\n      (next ? next._row.delBtn : input).focus();\n    }\n  }\n\n  const aliveItems = () =>\n    [...list.children].filter((li) => !li._row.leaving);\n\n  function clearAll(tone) {\n    const alive = aliveItems();\n    alive.forEach((li, i) => {\n      li._row.leaving = true;\n      li._row.te = 0;\n      li._row.delay = i * 5;       // little cascade\n    });\n    tasks = [];\n    save();\n    playTone(tone);\n    if (!alive.length) nudge();\n  }\n\n  function resetAll() {\n    if (document.activeElement && document.activeElement.blur) {\n      if (document.activeElement !== document.body) {\n        document.activeElement.blur();\n      }\n    }\n    input.value = '';\n    clearAll('reset');\n    try { localStorage.removeItem(STORE_KEY); } catch (err) { /* ignore */ }\n    save();\n  }\n\n  /* ---------- 7. Editing a task ---------- */\n  function toggleEdit(row) {\n    if (row.leaving) return;\n    row.editing ? finishEdit(row, true) : startEdit(row);\n  }\n\n  function startEdit(row) {\n    const box = document.createElement('input');\n    box.className = 'edit-input';\n    box.maxLength = 40;\n    box.value = row.task.text;\n    box.setAttribute('aria-label', 'Edit task text');\n    row.input = box;\n    row.editing = true;\n    row.li.classList.add('editing');\n    row.textEl.replaceWith(box);\n    paintRow(row);\n    box.focus();\n    box.select();\n\n    box.addEventListener('keydown', (e) => {\n      if (e.key === 'Enter') { e.preventDefault(); finishEdit(row, true); }\n      if (e.key === 'Escape') { e.preventDefault(); finishEdit(row, false); }\n    });\n    box.addEventListener('blur', (e) => {\n      if (e.relatedTarget !== row.editBtn) finishEdit(row, true);\n    });\n  }\n\n  function finishEdit(row, keep) {\n    if (!row.editing) return;\n    const text = row.input.value.trim();\n    row.editing = false;\n    row.li.classList.remove('editing');\n    if (keep && text && text !== row.task.text) {\n      row.task.text = text;\n      save();\n      playTone('edit');\n    }\n    row.input.replaceWith(row.textEl);\n    row.input = null;\n    paintRow(row);\n  }\n\n  /* ---------- 8. Small helpers ---------- */\n  function nudge() {                 // empty input / nothing to clear\n    badFrames = 40;\n    shake = reduceMotion ? 0 : 1;\n  }\n\n  function toggleSound() {\n    soundOn = !soundOn;\n    soundBtn.setAttribute('aria-pressed', String(soundOn));\n    soundBtn.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off');\n    soundBtn.classList.toggle('muted', !soundOn);\n    save();\n    playTone('toggle');\n  }\n\n  /* ---------- 9. Events ---------- */\n  form.addEventListener('submit', (e) => {\n    e.preventDefault();\n    addTask(input.value);\n    input.focus();\n  });\n  clearBtn.addEventListener('click', () => clearAll('clear'));\n  resetBtn.addEventListener('click', resetAll);\n  soundBtn.addEventListener('click', toggleSound);\n\n  // Arrow keys move between buttons, Delete removes the focused task\n  list.addEventListener('keydown', (e) => {\n    const btn = e.target.closest('button');\n    if (!btn) return;\n    const li = btn.closest('.item');\n    const btns = [...li.querySelectorAll('button')];\n    const at = btns.indexOf(btn);\n    const alive = aliveItems();\n    const pos = alive.indexOf(li);\n    let target = null;\n\n    if (e.key === 'ArrowRight') target = btns[at + 1] || btns[0];\n    if (e.key === 'ArrowLeft') target = btns[at - 1] || btns[btns.length - 1];\n    if (e.key === 'ArrowDown' && alive[pos + 1]) {\n      target = alive[pos + 1].querySelectorAll('button')[at];\n    }\n    if (e.key === 'ArrowUp' && alive[pos - 1]) {\n      target = alive[pos - 1].querySelectorAll('button')[at];\n    }\n    if (e.key === 'Delete') { e.preventDefault(); removeRow(li._row, true); }\n    if (target) { e.preventDefault(); target.focus(); }\n  });\n\n  // Global shortcuts (ignored while typing)\n  document.addEventListener('keydown', (e) => {\n    if (e.ctrlKey || e.metaKey || e.altKey) return;\n    if (e.target.matches('input, textarea')) {\n      if (e.key === 'Escape' && e.target === input) {\n        input.value = '';\n        input.blur();\n      }\n      return;\n    }\n    const key = e.key.toLowerCase();\n    if (key === '/') { e.preventDefault(); input.focus(); }\n    if (key === 'r') resetAll();\n    if (key === 'm') toggleSound();\n  });\n\n  /* ---------- 10. The one animation loop ---------- */\n  const approach = (value, target, k) => {\n    const next = value + (target - value) * k;\n    return Math.abs(target - next) \u003c .002 ? target : next;\n  };\n\n  function tick() {\n    frame++;\n    const k = reduceMotion ? 1 : .2;          // easing per frame\n\n    // hover + press on buttons, rows and the input\n    for (const s of states) {\n      s.h = approach(s.h, s.th, k);\n      s.p = approach(s.p, s.tp, Math.min(1, k * 1.6));\n      if (s.h !== s.ph) { s.el.style.setProperty('--h', s.h.toFixed(3)); }\n      if (s.p !== s.pp && s !== fieldState) {\n        s.el.style.setProperty('--p', s.p.toFixed(3));\n      }\n      s.ph = s.h;\n      s.pp = s.p;\n    }\n\n    // rows: enter, leave, done\n    let entering = false;\n    for (const row of rows.values()) {\n      if (row.delay > 0) { row.delay--; entering = true; continue; }\n      const e = approach(row.e, row.te, k * .8);\n      const d = approach(row.d, row.td, k * .9);\n      if (e !== row.e) row.li.style.setProperty('--e', e.toFixed(3));\n      if (d !== row.d) row.li.style.setProperty('--d', d.toFixed(3));\n      row.e = e;\n      row.d = d;\n      if (row.te === 1 && e \u003c 1) entering = true;\n\n      if (row.te === 0 && e === 0) {          // finished leaving\n        row.tracked.forEach((s) => states.delete(s));\n        row.li.remove();\n        rows.delete(row.task.id);\n      }\n    }\n    if (stickToEnd) {\n      list.scrollTop = list.scrollHeight;\n      if (!entering) stickToEnd = false;\n    }\n\n    // \"No tasks yet\" fades in when nothing is left\n    const nothing = tasks.length === 0;\n    const v = approach(emptyV, nothing ? 1 : 0, k);\n    if (v !== emptyV) empty.style.setProperty('--v', v.toFixed(3));\n    emptyV = v;\n\n    // shake + red outline when the input is empty\n    if (shake > .01) {\n      shake *= .88;\n      const dx = Math.sin(frame * 1.1) * shake * 10;\n      input.style.transform = `translateX(${dx}px)`;\n    } else if (input.style.transform) {\n      shake = 0;\n      input.style.transform = '';\n    }\n    if (badFrames > 0) badFrames--;\n    input.classList.toggle('bad', badFrames > 0);\n\n    requestAnimationFrame(tick);\n  }\n\n  /* ---------- 11. Start ---------- */\n  load();\n  soundBtn.setAttribute('aria-pressed', String(soundOn));\n  soundBtn.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off');\n  soundBtn.classList.toggle('muted', !soundOn);\n  tasks.forEach((t, i) => createRow(t, i * 6));\n  emptyV = tasks.length ? 0 : 1;\n  empty.style.setProperty('--v', String(emptyV));\n  requestAnimationFrame(tick);\n})();\n"}</script>
+<script>
+(() => {
+  const files = JSON.parse(document.getElementById('files').textContent);
+  const names = { html: 'index.html', css: 'style.css', js: 'script.js' };
+  const tabs = [...document.querySelectorAll('.tab')];
+  const blocks = [...document.querySelectorAll('pre')];
+  const area = document.getElementById('area');
+  const fileName = document.getElementById('fileName');
+  const copyBtn = document.getElementById('copyBtn');
+  let current = 'html';
+  let timer = 0;
+
+  function select(key) {
+    current = key;
+    tabs.forEach((t) => {
+      const on = t.dataset.key === key;
+      t.classList.toggle('on', on);
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    blocks.forEach((b) => { b.hidden = b.dataset.key !== key; });
+    fileName.textContent = names[key];
+    area.scrollTop = 0;
+  }
+
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t.dataset.key));
+    t.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      const next = tabs[(i + step + tabs.length) % tabs.length];
+      next.focus();
+      select(next.dataset.key);
+    });
+  });
+
+  async function copy() {
+    const text = files[current];
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {                       // fallback for older browsers / file://
+      const box = document.createElement('textarea');
+      box.value = text;
+      box.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(box);
+      box.select();
+      try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+      box.remove();
+    }
+    copyBtn.textContent = 'Copied';
+    clearTimeout(timer);
+    timer = setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1400);
+  }
+  copyBtn.addEventListener('click', copy);
+  select('html');
+})();
+</script>
+</body>
+</html>
